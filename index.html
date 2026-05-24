@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數學快答 + 鍵盤測試</title>
+
+<style>
+    body{
+        background:#111;
+        color:white;
+        font-family:Arial;
+        text-align:center;
+        padding-top:70px;
+    }
+
+    h1{ font-size:46px; }
+
+    #question{ font-size:40px; margin:25px 0; }
+
+    .choice{ font-size:28px; margin:8px; }
+
+    #result{
+        font-size:28px;
+        margin-top:20px;
+        color:#00ff99;
+    }
+
+    #hint{ margin-top:20px; color:#aaa; }
+
+    #testMode{
+        font-size:70px;
+        color:#ffcc00;
+        margin-top:30px;
+    }
+
+    #pressedKey{
+        font-size:28px;
+        margin-top:15px;
+        color:#66ccff;
+        min-height:40px;
+    }
+
+    #log{
+        margin-top:15px;
+        font-size:18px;
+        color:#ccc;
+        max-height:120px;
+        overflow:auto;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>🔫 數學快答 + ⌨️測試</h1>
+
+<div id="question">按 1 開始</div>
+<div id="choices"></div>
+
+<div id="result"></div>
+
+<div id="testMode"></div>
+<div id="pressedKey"></div>
+<div id="log"></div>
+
+<div id="hint">
+    作答：1~4 選答案<br>
+    按 Q 進入鍵盤測試
+</div>
+
+<audio id="gunshot" src="Gunshot.mp3"></audio>
+
+<script>
+let correctAnswer = 0;
+let correctIndex = 0;
+let startTime = 0;
+let answering = false;
+
+/* ===== 測試模式 ===== */
+let testActive = false;
+let testSeq = [];
+let testIndex = 0;
+
+function addLog(text){
+    let log = document.getElementById("log");
+    log.innerHTML += text + "<br>";
+    log.scrollTop = log.scrollHeight;
+}
+
+/* ===== 數學題 ===== */
+function rand(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function newQuestion(){
+    const ops = ["+","-","*","/"];
+    const op = ops[rand(0,3)];
+
+    let a,b,ans;
+
+    if(op==="+"){
+        a=rand(1,50); b=rand(1,50);
+        ans=a+b;
+    }
+    else if(op==="-"){
+        a=rand(1,50); b=rand(1,a);
+        ans=a-b;
+    }
+    else if(op==="*"){
+        a=rand(1,12); b=rand(1,12);
+        ans=a*b;
+    }
+    else{
+        b=rand(1,12);
+        ans=rand(1,12);
+        a=b*ans;
+    }
+
+    correctAnswer = ans;
+
+    let opts=[ans];
+    while(opts.length<4){
+        let fake=ans+rand(-10,10);
+        if(!opts.includes(fake)) opts.push(fake);
+    }
+
+    opts.sort(()=>Math.random()-0.5);
+    correctIndex = opts.indexOf(ans)+1;
+
+    document.getElementById("question").innerText = `${a} ${op} ${b} = ?`;
+
+    document.getElementById("choices").innerHTML =
+        opts.map((v,i)=>`<div class="choice">${i+1}. ${v}</div>`).join("");
+
+    document.getElementById("result").innerText="";
+
+    startTime = Date.now();
+    answering = true;
+}
+
+/* ===== 測試 ===== */
+function startTest(){
+    testActive=true;
+    answering=false;
+
+    testSeq = ["1","2","3","4","1","2","3","4","1","2","3","4"];
+    testIndex=0;
+
+    document.getElementById("question").innerText="⌨️鍵盤測試";
+    document.getElementById("choices").innerHTML="";
+    document.getElementById("result").innerText="";
+    document.getElementById("log").innerHTML="";
+
+    nextTestKey();
+}
+
+function nextTestKey(){
+    if(testIndex>=testSeq.length){
+        testActive=false;
+
+        document.getElementById("testMode").innerText="✔ 完成！";
+        document.getElementById("pressedKey").innerText="";
+
+        setTimeout(()=>{
+            document.getElementById("testMode").innerText="";
+            document.getElementById("question").innerText="按 1 開始";
+        },1200);
+
+        return;
+    }
+
+    document.getElementById("testMode").innerText =
+        testSeq[testIndex];
+}
+
+/* ===== 鍵盤 ===== */
+document.addEventListener("keydown",(e)=>{
+    let key = e.key.toUpperCase();
+
+    /* Q */
+    if(key==="Q" && !testActive){
+        startTest();
+        return;
+    }
+
+    /* 測試模式 */
+    if(testActive){
+
+        document.getElementById("pressedKey").innerText =
+            "你按了：" + key;
+
+        addLog("按下：" + key);
+
+        if(key===testSeq[testIndex]){
+            testIndex++;
+            nextTestKey();
+        }
+
+        return;
+    }
+
+    /* 開題 */
+    if(key==="1" && !answering){
+        newQuestion();
+        return;
+    }
+
+    /* 作答（🔥槍聲只在這裡） */
+    if(answering && ["1","2","3","4"].includes(key)){
+
+        let gun = document.getElementById("gunshot");
+        gun.currentTime = 0;
+        gun.play(); // ✔ 只在作答時播放
+
+        let t=((Date.now()-startTime)/1000).toFixed(2);
+
+        document.getElementById("result").innerText =
+            (Number(key)===correctIndex)
+            ? `✔ 正確！ ${t} 秒`
+            : `✘ 錯！答案 ${correctAnswer} / ${t} 秒`;
+
+        answering=false;
+    }
+});
+</script>
+
+</body>
+</html>
