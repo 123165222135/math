@@ -1,229 +1,805 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>數學快答 + 鍵盤測試</title>
-
-<style>
-    body{
-        background:#111;
-        color:white;
-        font-family:Arial;
-        text-align:center;
-        padding-top:70px;
-    }
-
-    h1{ font-size:46px; }
-
-    #question{ font-size:40px; margin:25px 0; }
-
-    .choice{ font-size:28px; margin:8px; }
-
-    #result{
-        font-size:28px;
-        margin-top:20px;
-        color:#00ff99;
-    }
-
-    #hint{ margin-top:20px; color:#aaa; }
-
-    #testMode{
-        font-size:70px;
-        color:#ffcc00;
-        margin-top:30px;
-    }
-
-    #pressedKey{
-        font-size:28px;
-        margin-top:15px;
-        color:#66ccff;
-        min-height:40px;
-    }
-
-    #log{
-        margin-top:15px;
-        font-size:18px;
-        color:#ccc;
-        max-height:120px;
-        overflow:auto;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雙人數學快速對戰</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .digital-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+    </style>
 </head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between overflow-hidden select-none">
 
-<body>
+    <!-- 頂部資訊列 -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 px-6 py-3 flex justify-between items-center z-10">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">⚡</span>
+            <h1 class="text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-400">MATH BATTLE</h1>
+        </div>
+        <div class="bg-slate-700/50 px-4 py-1.5 rounded-full text-xs text-slate-300 border border-slate-600 flex items-center space-x-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+            <span>按鍵 <kbd class="px-1.5 py-0.5 bg-slate-600 rounded text-white font-bold">Q</kbd> 可隨時暫停與測試按鍵</span>
+        </div>
+    </header>
 
-<h1>🔫 數學快答 + ⌨️測試</h1>
+    <!-- 主要遊戲畫面 -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 relative">
+        
+        <!-- 背景炫光特效 -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        </div>
 
-<div id="question">按 1 開始</div>
-<div id="choices"></div>
+        <div class="w-full max-w-4xl bg-slate-800/40 border border-slate-700/60 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative z-10">
+            
+            <!-- 1. 玩家準備畫面 -->
+            <div id="screen-setup" class="space-y-8">
+                <div class="text-center space-y-2">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">準備好進行決鬥了嗎？</h2>
+                    <p class="text-slate-400">請雙方玩家確認按鍵並按下準備鍵</p>
+                </div>
 
-<div id="result"></div>
+                <!-- 雙方玩家控制面板 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 玩家 A -->
+                    <div id="panel-player-a" class="bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-cyan-500/20 text-cyan-400 text-xs font-bold px-3 py-1 rounded-bl-xl">PLAYER A</div>
+                        <h3 class="text-2xl font-black text-cyan-400 mb-4 flex items-center">
+                            <span class="mr-2">🔴</span> 玩家 A
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between text-sm border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400">操作按鍵</span>
+                                <div class="flex space-x-1">
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">1 (A)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">2 (B)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">3 (C)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">4 (D)</kbd>
+                                </div>
+                            </div>
+                            <div class="pt-2 text-center">
+                                <span class="text-xs text-slate-400 block mb-2">按下 [1] 準備</span>
+                                <div id="status-ready-a" class="py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400">
+                                    尚未準備
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-<div id="testMode"></div>
-<div id="pressedKey"></div>
-<div id="log"></div>
+                    <!-- 玩家 B -->
+                    <div id="panel-player-b" class="bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-amber-500/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-bl-xl">PLAYER B</div>
+                        <h3 class="text-2xl font-black text-amber-400 mb-4 flex items-center">
+                            <span class="mr-2">🔵</span> 玩家 B
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between text-sm border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400">操作按鍵</span>
+                                <div class="flex space-x-1">
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">8 (A)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">7 (B)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">6 (C)</kbd>
+                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">5 (D)</kbd>
+                                </div>
+                            </div>
+                            <div class="pt-2 text-center">
+                                <span class="text-xs text-slate-400 block mb-2">按下 [8] 準備</span>
+                                <div id="status-ready-b" class="py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400">
+                                    尚未準備
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<div id="hint">
-    作答：1~4 選答案<br>
-    按 Q 進入鍵盤測試
-</div>
+                <div class="text-center text-sm text-slate-500">
+                    💡 雙方玩家都準備好後，遊戲將自動倒數3秒開始！
+                </div>
+            </div>
 
-<audio id="gunshot" src="Gunshot.mp3"></audio>
+            <!-- 2. 倒數計時畫面 -->
+            <div id="screen-countdown" class="hidden flex-col items-center justify-center py-12 space-y-6">
+                <h3 class="text-xl font-bold tracking-wider text-slate-400">準備戰鬥！</h3>
+                <div id="countdown-number" class="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-500 animate-bounce digital-font">
+                    3
+                </div>
+                <p class="text-sm text-slate-500">集中注意力，隨時準備按下答案！</p>
+            </div>
 
-<script>
-let correctAnswer = 0;
-let correctIndex = 0;
-let startTime = 0;
-let answering = false;
+            <!-- 3. 戰鬥答題畫面 -->
+            <div id="screen-battle" class="hidden space-y-8">
+                <!-- 頂部搶答指示燈 -->
+                <div class="flex justify-between items-center bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-700/50">
+                    <span class="text-xs text-slate-400">玩家 A 搶答區 (1, 2, 3, 4)</span>
+                    <div class="h-3 w-24 bg-slate-700 rounded-full overflow-hidden relative">
+                        <div id="buzz-indicator" class="absolute inset-y-0 w-1/2 bg-slate-500 transition-all duration-150"></div>
+                    </div>
+                    <span class="text-xs text-slate-400">玩家 B 搶答區 (8, 7, 6, 5)</span>
+                </div>
 
-/* ===== 測試模式 ===== */
-let testActive = false;
-let testSeq = [];
-let testIndex = 0;
+                <!-- 題目顯示區 -->
+                <div class="bg-slate-900/40 border border-slate-700 rounded-2xl p-8 text-center relative overflow-hidden">
+                    <div class="absolute top-2 left-2 text-[10px] text-slate-600 font-mono">MATH BATTLE ENGINE v1.0</div>
+                    <div id="math-question" class="text-4xl md:text-5xl font-black tracking-wide text-white digital-font my-4">
+                        15 + 8 = ?
+                    </div>
+                </div>
 
-function addLog(text){
-    let log = document.getElementById("log");
-    log.innerHTML += text + "<br>";
-    log.scrollTop = log.scrollHeight;
-}
+                <!-- 選項區 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 選項 A -->
+                    <div id="option-a-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">A</span>
+                            <span id="option-a-text" class="text-xl font-bold text-slate-200">23</span>
+                        </div>
+                        <div class="flex space-x-1 text-[10px]">
+                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 1</span>
+                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 8</span>
+                        </div>
+                    </div>
 
-/* ===== 數學題 ===== */
-function rand(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
-}
+                    <!-- 選項 B -->
+                    <div id="option-b-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">B</span>
+                            <span id="option-b-text" class="text-xl font-bold text-slate-200">25</span>
+                        </div>
+                        <div class="flex space-x-1 text-[10px]">
+                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 2</span>
+                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 7</span>
+                        </div>
+                    </div>
 
-function newQuestion(){
-    const ops = ["+","-","*","/"];
-    const op = ops[rand(0,3)];
+                    <!-- 選項 C -->
+                    <div id="option-c-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">C</span>
+                            <span id="option-c-text" class="text-xl font-bold text-slate-200">18</span>
+                        </div>
+                        <div class="flex space-x-1 text-[10px]">
+                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 3</span>
+                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 6</span>
+                        </div>
+                    </div>
 
-    let a,b,ans;
+                    <!-- 選項 D -->
+                    <div id="option-d-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">D</span>
+                            <span id="option-d-text" class="text-xl font-bold text-slate-200">30</span>
+                        </div>
+                        <div class="flex space-x-1 text-[10px]">
+                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 4</span>
+                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    if(op==="+"){
-        a=rand(1,50); b=rand(1,50);
-        ans=a+b;
-    }
-    else if(op==="-"){
-        a=rand(1,50); b=rand(1,a);
-        ans=a-b;
-    }
-    else if(op==="*"){
-        a=rand(1,12); b=rand(1,12);
-        ans=a*b;
-    }
-    else{
-        b=rand(1,12);
-        ans=rand(1,12);
-        a=b*ans;
-    }
+            <!-- 4. 結果判定畫面 -->
+            <div id="screen-result" class="hidden text-center py-8 space-y-6">
+                <div id="winner-crown" class="text-6xl animate-bounce">👑</div>
+                <div class="space-y-2">
+                    <h2 id="winner-title" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
+                        玩家 A 獲得勝利！
+                    </h2>
+                    <p id="winner-detail" class="text-slate-300 text-lg">答對了！實至名歸！</p>
+                </div>
+                
+                <div class="inline-block bg-slate-900/60 border border-slate-700 rounded-2xl px-8 py-6 max-w-md mx-auto space-y-3">
+                    <div class="text-sm text-slate-400">解答回顧</div>
+                    <div id="result-math-formula" class="text-2xl font-bold text-white digital-font">15 + 8 = 23</div>
+                    <div class="text-xs text-slate-500">
+                        答題者：<span id="result-buzzer-name" class="font-bold text-cyan-400">玩家 A</span> | 
+                        選擇答案：<span id="result-selected-option" class="font-bold text-rose-400">A</span>
+                    </div>
+                </div>
 
-    correctAnswer = ans;
+                <div class="animate-pulse text-amber-400 font-bold text-lg pt-4">
+                    🔥 經典再現！按下 [ 任何按鍵 ] 回到準備畫面
+                </div>
+            </div>
 
-    let opts=[ans];
-    while(opts.length<4){
-        let fake=ans+rand(-10,10);
-        if(!opts.includes(fake)) opts.push(fake);
-    }
+            <!-- 5. 鍵盤確認 (Q暫停) 畫面 -->
+            <div id="screen-keyboard-test" class="hidden space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs px-3 py-1 rounded-full font-bold">PAUSE</div>
+                    <h2 class="text-3xl font-black text-white">鍵盤按鍵功能驗證</h2>
+                    <p class="text-slate-400 text-sm">請在鍵盤任意按下雙方的這 8 個按鍵，全數通過即可返回遊戲</p>
+                </div>
 
-    opts.sort(()=>Math.random()-0.5);
-    correctIndex = opts.indexOf(ans)+1;
+                <!-- 整合型進度看板與即時偵測 -->
+                <div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="text-center md:text-left">
+                        <span class="text-xs text-slate-400 block">驗證進度</span>
+                        <span id="test-progress-text" class="text-lg font-bold text-cyan-400">已驗證按鍵：0 / 8</span>
+                    </div>
+                    <div class="flex-1 w-full max-w-md bg-slate-800 rounded-full h-4 overflow-hidden p-0.5 border border-slate-700">
+                        <div id="test-progress-bar" class="bg-gradient-to-r from-cyan-500 to-amber-500 h-full rounded-full transition-all duration-300 w-0"></div>
+                    </div>
+                    <div class="bg-slate-800/80 px-4 py-2.5 rounded-xl border border-slate-700 text-sm font-semibold min-w-[210px] text-center">
+                        <span class="text-[10px] text-slate-400 block leading-tight">即時輸入偵測</span>
+                        <span id="test-last-pressed" class="text-amber-400 font-bold">等待按鍵中...</span>
+                    </div>
+                </div>
 
-    document.getElementById("question").innerText = `${a} ${op} ${b} = ?`;
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 玩家 A 鍵盤檢測 -->
+                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 relative">
+                        <h3 class="text-lg font-bold text-cyan-400 mb-3 flex items-center justify-between">
+                            <span>🔴 玩家 A</span>
+                            <span class="text-xs text-slate-500">按鍵 1, 2, 3, 4</span>
+                        </h3>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div id="test-a-1" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 1</span>
+                                <span class="text-lg font-black text-slate-400">A</span>
+                            </div>
+                            <div id="test-a-2" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 2</span>
+                                <span class="text-lg font-black text-slate-400">B</span>
+                            </div>
+                            <div id="test-a-3" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 3</span>
+                                <span class="text-lg font-black text-slate-400">C</span>
+                            </div>
+                            <div id="test-a-4" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 4</span>
+                                <span class="text-lg font-black text-slate-400">D</span>
+                            </div>
+                        </div>
+                    </div>
 
-    document.getElementById("choices").innerHTML =
-        opts.map((v,i)=>`<div class="choice">${i+1}. ${v}</div>`).join("");
+                    <!-- 玩家 B 鍵盤檢測 -->
+                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 relative">
+                        <h3 class="text-lg font-bold text-amber-400 mb-3 flex items-center justify-between">
+                            <span>🔵 玩家 B</span>
+                            <span class="text-xs text-slate-500">按鍵 8, 7, 6, 5</span>
+                        </h3>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div id="test-b-8" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 8</span>
+                                <span class="text-lg font-black text-slate-400">A</span>
+                            </div>
+                            <div id="test-b-7" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 7</span>
+                                <span class="text-lg font-black text-slate-400">B</span>
+                            </div>
+                            <div id="test-b-6" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 6</span>
+                                <span class="text-lg font-black text-slate-400">C</span>
+                            </div>
+                            <div id="test-b-5" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
+                                <span class="text-xs text-slate-500 block">鍵 5</span>
+                                <span class="text-lg font-black text-slate-400">D</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    document.getElementById("result").innerText="";
+                <div class="text-center text-xs text-slate-500 animate-pulse">
+                    💡 只要這 8 個按鍵至少被按過一次，就會自動返回準備起始畫面。
+                </div>
+            </div>
 
-    startTime = Date.now();
-    answering = true;
-}
+        </div>
+    </main>
 
-/* ===== 測試 ===== */
-function startTest(){
-    testActive=true;
-    answering=false;
+    <!-- 底部操作提示 -->
+    <footer class="bg-slate-900/60 py-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
+        <div>MATH BATTLE © 雙人同屏極速數學挑戰賽</div>
+    </footer>
 
-    testSeq = ["1","2","3","4","1","2","3","4","1","2","3","4"];
-    testIndex=0;
+    <!-- 邏輯腳本 -->
+    <script>
+        // 遊戲狀態機
+        // STATES: 'SETUP', 'COUNTDOWN', 'BATTLE', 'RESULT', 'KEYBOARD_TEST'
+        let currentGameState = 'SETUP';
 
-    document.getElementById("question").innerText="⌨️鍵盤測試";
-    document.getElementById("choices").innerHTML="";
-    document.getElementById("result").innerText="";
-    document.getElementById("log").innerHTML="";
+        // 玩家準備狀態
+        let playerAReady = false;
+        let playerBReady = false;
 
-    nextTestKey();
-}
+        // 題目與解答資訊
+        let currentQuestion = {
+            formula: '',
+            options: { A: 0, B: 0, C: 0, D: 0 },
+            correctAnswer: 'A' // A, B, C, D
+        };
 
-function nextTestKey(){
-    if(testIndex>=testSeq.length){
-        testActive=false;
+        // 搶答狀態
+        let hasBuzzed = false;
+        let countdownTimer = null;
 
-        document.getElementById("testMode").innerText="✔ 完成！";
-        document.getElementById("pressedKey").innerText="";
+        // 鍵盤測試狀態 (扁平化管理 8 個按鍵)
+        let testKeysState = {
+            '1': false, '2': false, '3': false, '4': false,
+            '5': false, '6': false, '7': false, '8': false
+        };
 
-        setTimeout(()=>{
-            document.getElementById("testMode").innerText="";
-            document.getElementById("question").innerText="按 1 開始";
-        },1200);
+        // Web Audio 音效產生器
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
 
-        return;
-    }
-
-    document.getElementById("testMode").innerText =
-        testSeq[testIndex];
-}
-
-/* ===== 鍵盤 ===== */
-document.addEventListener("keydown",(e)=>{
-    let key = e.key.toUpperCase();
-
-    /* Q */
-    if(key==="Q" && !testActive){
-        startTest();
-        return;
-    }
-
-    /* 測試模式 */
-    if(testActive){
-
-        document.getElementById("pressedKey").innerText =
-            "你按了：" + key;
-
-        addLog("按下：" + key);
-
-        if(key===testSeq[testIndex]){
-            testIndex++;
-            nextTestKey();
+                if (type === 'tick') {
+                    // 倒數計時滴答聲
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.12);
+                } else if (type === 'start') {
+                    // 遊戲開始音效
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'correct') {
+                    // 答對音效
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.24); // C6
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.45);
+                } else if (type === 'wrong') {
+                    // 答錯/炸膛音效
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'click') {
+                    // 準備/按鍵音效
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(330, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }
+            } catch (e) {
+                console.log("Audio not allowed yet or error: ", e);
+            }
         }
 
-        return;
-    }
+        // DOM 元素快取
+        const screens = {
+            setup: document.getElementById('screen-setup'),
+            countdown: document.getElementById('screen-countdown'),
+            battle: document.getElementById('screen-battle'),
+            result: document.getElementById('screen-result'),
+            keyTest: document.getElementById('screen-keyboard-test')
+        };
 
-    /* 開題 */
-    if(key==="1" && !answering){
-        newQuestion();
-        return;
-    }
+        const readyStatuses = {
+            a: document.getElementById('status-ready-a'),
+            b: document.getElementById('status-ready-b')
+        };
 
-    /* 作答（🔥槍聲只在這裡） */
-    if(answering && ["1","2","3","4"].includes(key)){
+        const panels = {
+            a: document.getElementById('panel-player-a'),
+            b: document.getElementById('panel-player-b')
+        };
 
-        let gun = document.getElementById("gunshot");
-        gun.currentTime = 0;
-        gun.play(); // ✔ 只在作答時播放
+        // 切換畫面函數
+        function changeScreen(targetState) {
+            currentGameState = targetState;
+            Object.keys(screens).forEach(key => {
+                screens[key].classList.add('hidden');
+            });
 
-        let t=((Date.now()-startTime)/1000).toFixed(2);
+            if (targetState === 'SETUP') {
+                screens.setup.classList.remove('hidden');
+            } else if (targetState === 'COUNTDOWN') {
+                screens.countdown.classList.remove('hidden');
+            } else if (targetState === 'BATTLE') {
+                screens.battle.classList.remove('hidden');
+            } else if (targetState === 'RESULT') {
+                screens.result.classList.remove('hidden');
+            } else if (targetState === 'KEYBOARD_TEST') {
+                screens.keyTest.classList.remove('hidden');
+            }
+        }
 
-        document.getElementById("result").innerText =
-            (Number(key)===correctIndex)
-            ? `✔ 正確！ ${t} 秒`
-            : `✘ 錯！答案 ${correctAnswer} / ${t} 秒`;
+        // 初始化遊戲與準備畫面
+        function initSetup() {
+            playerAReady = false;
+            playerBReady = false;
+            hasBuzzed = false;
 
-        answering=false;
-    }
-});
-</script>
+            // 更新 UI 狀態
+            readyStatuses.a.textContent = '尚未準備';
+            readyStatuses.a.className = "py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400";
+            panels.a.className = "bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden";
 
+            readyStatuses.b.textContent = '尚未準備';
+            readyStatuses.b.className = "py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400";
+            panels.b.className = "bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden";
+
+            // 重設按鍵檢測狀態
+            testKeysState = {
+                '1': false, '2': false, '3': false, '4': false,
+                '5': false, '6': false, '7': false, '8': false
+            };
+
+            changeScreen('SETUP');
+        }
+
+        // 觸發玩家 A 準備
+        function triggerReadyA() {
+            if (playerAReady) return;
+            playerAReady = true;
+            playSound('click');
+            readyStatuses.a.textContent = '準備就緒！';
+            readyStatuses.a.className = "py-4 rounded-xl text-lg font-bold transition-all border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 animate-pulse";
+            panels.a.className = "bg-slate-800/80 border-2 border-cyan-500/50 rounded-2xl p-6 scale-[1.02] shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all duration-300 relative overflow-hidden";
+            checkBothReady();
+        }
+
+        // 觸發玩家 B 準備
+        function triggerReadyB() {
+            if (playerBReady) return;
+            playerBReady = true;
+            playSound('click');
+            readyStatuses.b.textContent = '準備就緒！';
+            readyStatuses.b.className = "py-4 rounded-xl text-lg font-bold transition-all border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 animate-pulse";
+            panels.b.className = "bg-slate-800/80 border-2 border-amber-500/50 rounded-2xl p-6 scale-[1.02] shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all duration-300 relative overflow-hidden";
+            checkBothReady();
+        }
+
+        // 檢查雙方是否都準備完畢
+        function checkBothReady() {
+            if (playerAReady && playerBReady) {
+                startCountdown();
+            }
+        }
+
+        // 倒數 3 秒開始遊戲
+        function startCountdown() {
+            changeScreen('COUNTDOWN');
+            let count = 3;
+            const countdownEl = document.getElementById('countdown-number');
+            countdownEl.textContent = count;
+            playSound('tick');
+
+            if (countdownTimer) clearInterval(countdownTimer);
+
+            countdownTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.textContent = count;
+                    playSound('tick');
+                } else {
+                    clearInterval(countdownTimer);
+                    playSound('start');
+                    startBattle();
+                }
+            }, 1000);
+        }
+
+        // 產生一道隨機的二位數加減乘除數學題
+        function generateMathQuestion() {
+            const types = ['+', '-', '*'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            let num1, num2, formula, answer;
+
+            if (type === '+') {
+                num1 = Math.floor(Math.random() * 80) + 11; // 11 ~ 90
+                num2 = Math.floor(Math.random() * 80) + 11;
+                formula = `${num1} + ${num2}`;
+                answer = num1 + num2;
+            } else if (type === '-') {
+                num1 = Math.floor(Math.random() * 80) + 20; // 20 ~ 99
+                num2 = Math.floor(Math.random() * (num1 - 5)) + 5; // 保證正數且不為零
+                formula = `${num1} - ${num2}`;
+                answer = num1 - num2;
+            } else { // 乘法
+                num1 = Math.floor(Math.random() * 12) + 3; // 3 ~ 14
+                num2 = Math.floor(Math.random() * 12) + 3; // 3 ~ 14
+                formula = `${num1} × ${num2}`;
+                answer = num1 * num2;
+            }
+
+            // 產生 4 個不重複的選項
+            const falseAnswers = new Set();
+            while (falseAnswers.size < 3) {
+                const offset = (Math.floor(Math.random() * 15) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                const wrongAns = answer + offset;
+                if (wrongAns !== answer && wrongAns > 0) {
+                    falseAnswers.add(wrongAns);
+                }
+            }
+
+            const falseArr = Array.from(falseAnswers);
+            const optionKeys = ['A', 'B', 'C', 'D'];
+            const correctKey = optionKeys[Math.floor(Math.random() * 4)];
+
+            const options = {};
+            let falseIdx = 0;
+            optionKeys.forEach(key => {
+                if (key === correctKey) {
+                    options[key] = answer;
+                } else {
+                    options[key] = falseArr[falseIdx++];
+                }
+            });
+
+            return {
+                formula: formula + ' = ?',
+                options: options,
+                correctAnswer: correctKey,
+                correctValue: answer
+            };
+        }
+
+        // 開始對戰答題
+        function startBattle() {
+            hasBuzzed = false;
+            currentQuestion = generateMathQuestion();
+
+            // 更新戰鬥畫面
+            document.getElementById('math-question').textContent = currentQuestion.formula;
+            document.getElementById('option-a-text').textContent = currentQuestion.options.A;
+            document.getElementById('option-b-text').textContent = currentQuestion.options.B;
+            document.getElementById('option-c-text').textContent = currentQuestion.options.C;
+            document.getElementById('option-d-text').textContent = currentQuestion.options.D;
+
+            // 重設選項盒的樣式
+            ['a', 'b', 'c', 'd'].forEach(letter => {
+                const box = document.getElementById(`option-${letter}-box`);
+                box.className = "bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200";
+            });
+
+            const buzzIndicator = document.getElementById('buzz-indicator');
+            buzzIndicator.className = "absolute inset-y-0 w-1 bg-slate-500 left-1/2 -translate-x-1/2 transition-all duration-150";
+
+            changeScreen('BATTLE');
+        }
+
+        // 處理玩家作答
+        // player: 'A' 或 'B'
+        // choice: 'A', 'B', 'C', 'D'
+        function handleAnswer(player, choice) {
+            if (hasBuzzed) return; // 已經有人搶答，不予受理
+            hasBuzzed = true;
+
+            // 播放同個資料夾中的 gunshot.mp3 音效
+            try {
+                const gunshot = new Audio('gunshot.mp3');
+                gunshot.play().catch(e => {
+                    console.log("gunshot.mp3 播放受瀏覽器安全限制或檔案不存在：", e);
+                });
+            } catch (e) {
+                console.log("播放槍聲失敗：", e);
+            }
+
+            const isCorrect = (choice === currentQuestion.correctAnswer);
+
+            // 搶答指示條視覺偏向
+            const buzzIndicator = document.getElementById('buzz-indicator');
+            if (player === 'A') {
+                buzzIndicator.className = "absolute inset-y-0 bg-cyan-500 left-0 right-1/2 transition-all duration-150";
+            } else {
+                buzzIndicator.className = "absolute inset-y-0 bg-amber-500 left-1/2 right-0 transition-all duration-150";
+            }
+
+            // 高亮玩家選擇的答案
+            const chosenBox = document.getElementById(`option-${choice.toLowerCase()}-box`);
+            if (isCorrect) {
+                chosenBox.className = "bg-emerald-950/80 border-2 border-emerald-500 rounded-xl p-4 flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-200";
+                playSound('correct');
+            } else {
+                chosenBox.className = "bg-rose-950/80 border-2 border-rose-500 rounded-xl p-4 flex items-center justify-between shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all duration-200";
+                playSound('wrong');
+            }
+
+            // 稍微延遲後切換到判定結果
+            setTimeout(() => {
+                showResult(player, choice, isCorrect);
+            }, 800);
+        }
+
+        // 顯示結果判定
+        function showResult(buzzPlayer, choice, isCorrect) {
+            const crown = document.getElementById('winner-crown');
+            const title = document.getElementById('winner-title');
+            const detail = document.getElementById('winner-detail');
+            
+            let winner = '';
+            if (isCorrect) {
+                winner = buzzPlayer === 'A' ? '玩家 A' : '玩家 B';
+                crown.textContent = '👑';
+                title.textContent = `${winner} 獲得勝利！`;
+                title.className = "text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500";
+                detail.textContent = `精準搶答，回答正確！`;
+            } else {
+                // 炸膛！另一位玩家獲勝
+                winner = buzzPlayer === 'A' ? '玩家 B' : '玩家 A';
+                crown.textContent = '💥';
+                title.textContent = `💥 ${buzzPlayer === 'A' ? '玩家 A' : '玩家 B'} 炸膛爆機！`;
+                title.className = "text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 animate-pulse";
+                detail.textContent = `${buzzPlayer === 'A' ? '玩家 A' : '玩家 B'} 答錯了，因此【${winner}】直接勝出！`;
+            }
+
+            // 更新回顧資訊
+            document.getElementById('result-math-formula').textContent = `${currentQuestion.formula.replace('?', '')} = ${currentQuestion.correctValue}`;
+            
+            const buzzerNameEl = document.getElementById('result-buzzer-name');
+            buzzerNameEl.textContent = buzzPlayer === 'A' ? '玩家 A' : '玩家 B';
+            buzzerNameEl.className = buzzPlayer === 'A' ? "font-bold text-cyan-400" : "font-bold text-amber-400";
+            
+            document.getElementById('result-selected-option').textContent = choice;
+            document.getElementById('result-selected-option').className = isCorrect ? "font-bold text-emerald-400" : "font-bold text-rose-500";
+
+            changeScreen('RESULT');
+        }
+
+        // 開啟 Q 鍵盤確認測試畫面
+        function openKeyboardTest() {
+            if (countdownTimer) clearInterval(countdownTimer); // 終止倒數
+            
+            // 重設測試鍵盤的所有按鍵記錄
+            const keysA = ['1', '2', '3', '4'];
+            const keysB = ['8', '7', '6', '5'];
+
+            keysA.forEach(k => {
+                testKeysState[k] = false;
+                document.getElementById(`test-a-${k}`).className = "border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200";
+            });
+
+            keysB.forEach(k => {
+                testKeysState[k] = false;
+                document.getElementById(`test-b-${k}`).className = "border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200";
+            });
+
+            // 重設上方計量看板
+            document.getElementById('test-progress-text').textContent = "已驗證按鍵：0 / 8";
+            document.getElementById('test-progress-bar').style.width = "0%";
+            document.getElementById('test-last-pressed').textContent = "等待按鍵中...";
+            document.getElementById('test-last-pressed').className = "text-slate-400 font-bold";
+
+            changeScreen('KEYBOARD_TEST');
+        }
+
+        // 鍵盤測試判定 (8個按鍵任意按)
+        function handleTestKeyInput(key) {
+            playSound('click');
+            
+            // 標記該按鍵已點亮
+            testKeysState[key] = true;
+
+            // 判斷玩家與按鍵名稱，用作螢幕即時顯示
+            let keyIndicatorText = "";
+            let isPlayerAKey = ['1', '2', '3', '4'].includes(key);
+
+            if (isPlayerAKey) {
+                const optionMap = { '1':'A', '2':'B', '3':'C', '4':'D' };
+                keyIndicatorText = `玩家 A 按下 [${key}] (${optionMap[key]})`;
+                
+                // 動態高亮對應 DOM (Cyan 系列)
+                const el = document.getElementById(`test-a-${key}`);
+                el.className = "border-2 border-cyan-500 bg-cyan-950/40 p-3 rounded-lg text-center font-bold text-cyan-400 scale-105 transition-all duration-150 shadow-[0_0_10px_rgba(6,182,212,0.2)]";
+            } else {
+                const optionMap = { '8':'A', '7':'B', '6':'C', '5':'D' };
+                keyIndicatorText = `玩家 B 按下 [${key}] (${optionMap[key]})`;
+                
+                // 動態高亮對應 DOM (Amber 系列)
+                const el = document.getElementById(`test-b-${key}`);
+                el.className = "border-2 border-amber-500 bg-amber-950/40 p-3 rounded-lg text-center font-bold text-amber-400 scale-105 transition-all duration-150 shadow-[0_0_10px_rgba(245,158,11,0.2)]";
+            }
+
+            // 更新即時偵測面板
+            const lastPressedEl = document.getElementById('test-last-pressed');
+            lastPressedEl.textContent = keyIndicatorText;
+            lastPressedEl.className = isPlayerAKey ? "text-cyan-400 font-bold" : "text-amber-400 font-bold";
+
+            // 計算當前已被驗證點亮的按鍵總數 (有幾項為 true)
+            const activeKeysArray = Object.keys(testKeysState);
+            const verifiedCount = activeKeysArray.filter(k => testKeysState[k] === true).length;
+
+            // 更新進度顯示與進度條
+            document.getElementById('test-progress-text').textContent = `已驗證按鍵：${verifiedCount} / 8`;
+            const percentage = (verifiedCount / 8) * 100;
+            document.getElementById('test-progress-bar').style.width = `${percentage}%`;
+
+            // 當 8 個按鍵全部完成
+            if (verifiedCount === 8) {
+                lastPressedEl.textContent = "🎉 驗證完畢！";
+                lastPressedEl.className = "text-emerald-400 font-black animate-bounce";
+                
+                setTimeout(() => {
+                    playSound('correct');
+                    initSetup();
+                }, 800);
+            }
+        }
+
+        // 全域鍵盤監聽事件
+        window.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            // 任何時候按下 Q，皆進入鍵盤功能確認
+            if (key.toLowerCase() === 'q') {
+                openKeyboardTest();
+                return;
+            }
+
+            // 1. 準備畫面狀態
+            if (currentGameState === 'SETUP') {
+                if (key === '1') {
+                    triggerReadyA();
+                } else if (key === '8') {
+                    triggerReadyB();
+                }
+            }
+            
+            // 2. 對戰抢答狀態
+            else if (currentGameState === 'BATTLE') {
+                // A 玩家控制: 1->A, 2->B, 3->C, 4->D
+                if (key === '1') {
+                    handleAnswer('A', 'A');
+                } else if (key === '2') {
+                    handleAnswer('A', 'B');
+                } else if (key === '3') {
+                    handleAnswer('A', 'C');
+                } else if (key === '4') {
+                    handleAnswer('A', 'D');
+                }
+                
+                // B 玩家控制: 8->A, 7->B, 6->C, 5->D
+                else if (key === '8') {
+                    handleAnswer('B', 'A');
+                } else if (key === '7') {
+                    handleAnswer('B', 'B');
+                } else if (key === '6') {
+                    handleAnswer('B', 'C');
+                } else if (key === '5') {
+                    handleAnswer('B', 'D');
+                }
+            }
+
+            // 3. 結果判定狀態：按下任意按鍵返回準備畫面
+            else if (currentGameState === 'RESULT') {
+                playSound('click');
+                initSetup();
+            }
+
+            // 4. 鍵盤確認測試狀態
+            else if (currentGameState === 'KEYBOARD_TEST') {
+                if (['1','2','3','4','8','7','6','5'].includes(key)) {
+                    handleTestKeyInput(key);
+                }
+            }
+        });
+
+        // 啟動首頁
+        initSetup();
+    </script>
 </body>
 </html>
