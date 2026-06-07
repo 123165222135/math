@@ -3,411 +3,964 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雙人數學快速對戰</title>
+    <title>雙人數學快速對戰 (MATH BATTLE ARCADE)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Noto+Sans+TC:wght=900&display=swap');
+        
         body {
-            font-family: 'Noto Sans TC', sans-serif;
+            font-family: 'Noto Sans TC', monospace, sans-serif;
+            image-rendering: pixelated;
+        }
+        
+        /* 復古像素字體類別 */
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
         }
         .digital-font {
-            font-family: 'Share Tech Mono', monospace;
+            font-family: 'VT323', monospace;
+        }
+
+        /* 像素立體邊框與陰影 */
+        .retro-border-cyan {
+            border: 6px solid #000;
+            box-shadow: 6px 6px 0px 0px #06b6d4;
+        }
+        .retro-border-amber {
+            border: 6px solid #000;
+            box-shadow: 6px 6px 0px 0px #f59e0b;
+        }
+        .retro-border-slate {
+            border: 6px solid #000;
+            box-shadow: 6px 6px 0px 0px #475569;
+        }
+        .retro-border-rose {
+            border: 6px solid #000;
+            box-shadow: 6px 6px 0px 0px #f43f5e;
+        }
+
+        /* 街機按鈕立體點擊效果 */
+        .arcade-btn {
+            image-rendering: pixelated;
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+        .arcade-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 1px 1px 0px 0px #000 !important;
+        }
+
+        /* 網格點背景 */
+        .pixel-grid {
+            background-color: #020617;
+            background-image: radial-gradient(#1e293b 10%, transparent 10%);
+            background-size: 20px 20px;
+        }
+
+        /* 齒輪旋轉動畫 */
+        @keyframes gear-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hover-spin:hover {
+            animation: gear-spin 3s linear infinite;
+        }
+
+        /* 光線槍壓暗剪影與點亮解鎖濾鏡 */
+        .gun-silhouette {
+            filter: brightness(0.5) grayscale(0.3);
+            transition: filter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.2s ease;
+        }
+        .gun-unlocked {
+            filter: brightness(1) drop-shadow(0 0 16px rgba(6, 182, 212, 0.9));
+            animation: gun-neon-pulse 1.5s infinite alternate;
+        }
+        .gun-unlocked-right {
+            filter: brightness(1) drop-shadow(0 0 16px rgba(245, 158, 11, 0.9));
+            animation: gun-neon-pulse-alt 1.5s infinite alternate;
+        }
+
+        @keyframes gun-neon-pulse {
+            0% { filter: brightness(1) drop-shadow(0 0 8px rgba(6, 182, 212, 0.6)); }
+            100% { filter: brightness(1.3) drop-shadow(0 0 24px rgba(6, 182, 212, 1)); }
+        }
+        @keyframes gun-neon-pulse-alt {
+            0% { filter: brightness(1) drop-shadow(0 0 8px rgba(245, 158, 11, 0.6)); }
+            100% { filter: brightness(1.3) drop-shadow(0 0 24px rgba(245, 158, 11, 1)); }
+        }
+
+        /* 像素滑桿樣式 */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #0f172a;
+            border: 3px solid #000;
+            height: 14px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #06b6d4;
+            border: 3px solid #000;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px 0px #000;
+        }
+
+        /* ==================== 終局手槍特徵動畫 ==================== */
+        /* 獲勝者光環 (神準解題命中) */
+        @keyframes winner-pulse-correct {
+            0% { box-shadow: inset 0 0 15px rgba(234, 179, 8, 0.4), 0 0 20px rgba(234, 179, 8, 0.5); border-color: #eab308; }
+            100% { box-shadow: inset 0 0 35px rgba(234, 179, 8, 0.9), 0 0 45px rgba(234, 179, 8, 1.2); border-color: #fbbf24; }
+        }
+        .gun-winner-glow-correct {
+            animation: winner-pulse-correct 0.7s infinite alternate !important;
+            background-color: rgba(253, 224, 71, 0.15) !important;
+        }
+
+        /* 獲勝者光環 (對手炸膛，安全生還) */
+        @keyframes winner-pulse-survive {
+            0% { box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.4), 0 0 20px rgba(34, 197, 94, 0.5); border-color: #22c55e; }
+            100% { box-shadow: inset 0 0 35px rgba(34, 197, 94, 0.9), 0 0 45px rgba(34, 197, 94, 1.2); border-color: #4ade80; }
+        }
+        .gun-winner-glow-survive {
+            animation: winner-pulse-survive 0.7s infinite alternate !important;
+            background-color: rgba(74, 222, 128, 0.12) !important;
+        }
+
+        /* 慘遭炸膛手槍的深紅爆燃與螢幕震動 */
+        @keyframes loser-backfire-pulse {
+            0% { box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.5), 0 0 20px rgba(239, 68, 68, 0.6); border-color: #ef4444; }
+            100% { box-shadow: inset 0 0 40px rgba(239, 68, 68, 1), 0 0 50px rgba(239, 68, 68, 1.3); border-color: #b91c1c; }
+        }
+        .gun-loser-backfire {
+            animation: loser-backfire-pulse 0.3s infinite alternate, shake 0.12s infinite !important;
+            background-color: rgba(239, 68, 68, 0.25) !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-4px, 3px) rotate(-1.5deg); }
+            40% { transform: translate(4px, -3px) rotate(1.5deg); }
+            60% { transform: translate(-4px, -2px) rotate(-1.5deg); }
+            80% { transform: translate(3px, 3px) rotate(1deg); }
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between overflow-hidden select-none">
+<body class="pixel-grid text-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 select-none relative overflow-hidden">
 
-    <!-- 頂部資訊列 -->
-    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 px-6 py-3 flex justify-between items-center z-10">
-        <div class="flex items-center space-x-3">
-            <span class="text-2xl">⚡</span>
-            <h1 class="text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-400">MATH BATTLE</h1>
-        </div>
-        <div class="bg-slate-700/50 px-4 py-1.5 rounded-full text-xs text-slate-300 border border-slate-600 flex items-center space-x-2">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-            <span>按鍵 <kbd class="px-1.5 py-0.5 bg-slate-600 rounded text-white font-bold">Q</kbd> 可隨時暫停與測試按鍵</span>
-        </div>
-    </header>
+    <!-- 16:9 大型框體，限制最大寬度與高度，等比例縮放 -->
+    <div class="aspect-[16/9] w-full max-w-[1920px] max-h-[1080px] bg-slate-950 border-[10px] border-slate-900 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] rounded-xl flex flex-col justify-between overflow-hidden relative">
 
-    <!-- 主要遊戲畫面 -->
-    <main class="flex-1 flex flex-col items-center justify-center p-4 relative">
-        
-        <!-- 背景炫光特效 -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-        </div>
+        <!-- 頂部街機資訊面板 -->
+        <header class="bg-slate-950 border-b-4 border-slate-900 px-6 py-2.5 flex justify-between items-center z-10">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl animate-bounce">👾</span>
+                <h1 class="text-sm sm:text-base pixel-font tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-yellow-400">
+                    MATH_BATTLE
+                </h1>
+            </div>
+            <!-- 資訊中心面板 -->
+            <div class="flex items-center space-x-2">
+                <button id="btn-settings" class="arcade-btn bg-slate-800 text-xs border-2 border-black shadow-[2px_2px_0px_0px_#000] p-1 hover:bg-slate-700 active:bg-slate-900 flex items-center justify-center">
+                    <span class="hover-spin inline-block">⚙️</span>
+                </button>
+            </div>
+        </header>
 
-        <div class="w-full max-w-4xl bg-slate-800/40 border border-slate-700/60 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative z-10">
+        <!-- 核心戰鬥、設定與回饋舞台 -->
+        <main class="flex-1 flex flex-col items-center justify-center p-3 relative z-10 w-full overflow-hidden">
             
-            <!-- 1. 玩家準備畫面 -->
-            <div id="screen-setup" class="space-y-8">
-                <div class="text-center space-y-2">
-                    <h2 class="text-3xl md:text-4xl font-black text-white">準備好進行決鬥了嗎？</h2>
-                    <p class="text-slate-400">請雙方玩家確認按鍵並按下準備鍵</p>
+            <!-- ==================== 1. 遊戲設定與準備畫面 ==================== -->
+            <div id="screen-setup" class="w-full h-full max-w-5xl flex flex-col justify-between py-2 space-y-4">
+                <div class="text-center space-y-1">
+                    <h2 id="setup-title" class="text-base sm:text-lg md:text-xl font-black text-yellow-400 pixel-font tracking-tight" style="text-shadow: 2px 2px 0px #000;" data-i18n="insertCoin">INSERT COIN TO PLAY</h2>
+                    <p id="setup-subtitle" class="text-slate-400 text-[8px] pixel-font uppercase" data-i18n="setupDescr">CONFIRM TO INITIALIZE WEAPONS</p>
                 </div>
 
-                <!-- 雙方玩家控制面板 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 玩家 A -->
-                    <div id="panel-player-a" class="bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-cyan-500/20 text-cyan-400 text-xs font-bold px-3 py-1 rounded-bl-xl">PLAYER A</div>
-                        <h3 class="text-2xl font-black text-cyan-400 mb-4 flex items-center">
-                            <span class="mr-2">🔴</span> 玩家 A
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between text-sm border-b border-slate-700/50 pb-2">
-                                <span class="text-slate-400">操作按鍵</span>
-                                <div class="flex space-x-1">
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">1 (A)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">2 (B)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">3 (C)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">4 (D)</kbd>
-                                </div>
-                            </div>
-                            <div class="pt-2 text-center">
-                                <span class="text-xs text-slate-400 block mb-2">按下 [1] 準備</span>
-                                <div id="status-ready-a" class="py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400">
-                                    尚未準備
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 玩家 B -->
-                    <div id="panel-player-b" class="bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-amber-500/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-bl-xl">PLAYER B</div>
-                        <h3 class="text-2xl font-black text-amber-400 mb-4 flex items-center">
-                            <span class="mr-2">🔵</span> 玩家 B
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between text-sm border-b border-slate-700/50 pb-2">
-                                <span class="text-slate-400">操作按鍵</span>
-                                <div class="flex space-x-1">
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">8 (A)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">7 (B)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">6 (C)</kbd>
-                                    <kbd class="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-xs">5 (D)</kbd>
-                                </div>
-                            </div>
-                            <div class="pt-2 text-center">
-                                <span class="text-xs text-slate-400 block mb-2">按下 [8] 準備</span>
-                                <div id="status-ready-b" class="py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400">
-                                    尚未準備
-                                </div>
-                            </div>
-                        </div>
+                <!-- 難易度調整列 -->
+                <div class="bg-slate-900 px-6 py-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center justify-between w-full max-w-4xl mx-auto gap-4">
+                    <label class="text-[9px] md:text-xs pixel-font text-cyan-400 tracking-wider md:w-1/4 text-center md:text-left" data-i18n="difficulty">DIFFICULTY</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-3/4">
+                        <button onclick="setDifficulty('easy')" id="diff-easy" class="arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="easy">
+                            EASY
+                        </button>
+                        <button onclick="setDifficulty('medium')" id="diff-medium" class="arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-cyan-700 text-white shadow-[2px_2px_0px_0px_#000]" data-i18n="normal">
+                            NORMAL
+                        </button>
+                        <button onclick="setDifficulty('hard')" id="diff-hard" class="arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="hard">
+                            HARD
+                        </button>
+                        <button onclick="setDifficulty('hell')" id="diff-hell" class="arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="hell">
+                            HELL
+                        </button>
                     </div>
                 </div>
 
-                <div class="text-center text-sm text-slate-500">
-                    💡 雙方玩家都準備好後，遊戲將自動倒數3秒開始！
+                <!-- 左右雙槍確認區 -->
+                <div class="grid grid-cols-12 gap-3 items-stretch w-full">
+                    
+                    <!-- 玩家 A 準備區與左側槍枝 -->
+                    <div id="panel-player-a" class="col-span-4 bg-slate-900 border-2 border-black p-3 shadow-[3px_3px_0px_0px_#06b6d4] flex flex-col justify-between items-center text-center">
+                        <div class="w-full flex justify-between items-center border-b-2 border-slate-800 pb-1">
+                            <span class="bg-cyan-600 text-black text-[7px] pixel-font px-1.5 py-0.5 font-bold" data-i18n="p1Label">1P_PLAYER</span>
+                            <span class="text-cyan-400 text-[9px] pixel-font">RED</span>
+                        </div>
+                        
+                        <div id="gun-left-container" class="my-3 h-48 flex items-center justify-center relative w-full bg-slate-950 border-2 border-black p-2">
+                            <img id="gun-left" src="media/gun L-1.png" alt="Gun Left" class="gun-silhouette h-40 object-contain w-auto" 
+                                 onerror="handleGunError('left');">
+                        </div>
+
+                        <div class="w-full">
+                            <p id="p1-keys-label" class="text-[7px] pixel-font text-slate-500 leading-tight mb-2" data-i18n="p1Keys"></p>
+                        </div>
+                        <button onclick="triggerReadyA()" id="btn-ready-a" class="arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-rose-700 text-white shadow-[2px_2px_0px_0px_#000] hover:bg-rose-600 active:bg-rose-900" data-i18n="p1ReadyHint">
+                            CONFIRM (A)
+                        </button>
+                    </div>
+
+                    <!-- 中央操作說明與提示看板 -->
+                    <div class="col-span-4 bg-slate-900 border-2 border-black p-2 flex flex-col justify-center items-center text-center space-y-3">
+                        <span class="text-3xl animate-pulse">🆚</span>
+                        <div class="space-y-1.5">
+                            <div class="text-[8px] pixel-font text-emerald-400 uppercase" data-i18n="gunLobbyStatus">SYSTEM READY</div>
+                            <p class="text-[7px] pixel-font text-slate-400 leading-normal" data-i18n="gunLobbyInstruction"></p>
+                        </div>
+                        <div class="h-2 w-full bg-slate-950 border border-black relative overflow-hidden">
+                            <div class="h-full bg-indigo-500 animate-[pulse_1.5s_infinite] w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- 玩家 B 準備區與右側槍枝 -->
+                    <div id="panel-player-b" class="col-span-4 bg-slate-900 border-2 border-black p-3 shadow-[3px_3px_0px_0px_#f59e0b] flex flex-col justify-between items-center text-center transition-all">
+                        <div id="setup-header-b" class="w-full flex justify-between items-center border-b-2 border-slate-800 pb-1 transition-all">
+                            <span class="bg-amber-500 text-black text-[7px] pixel-font px-1.5 py-0.5 font-bold" data-i18n="p2Label">2P_PLAYER</span>
+                            <span class="text-amber-400 text-[9px] pixel-font">BLUE</span>
+                        </div>
+
+                        <div id="gun-right-container" class="my-3 h-48 flex items-center justify-center relative w-full bg-slate-950 border-2 border-black p-2">
+                            <img id="gun-right" src="media/gun R-1.png" alt="Gun Right" class="gun-silhouette h-40 object-contain w-auto" 
+                                 onerror="handleGunError('right');">
+                        </div>
+
+                        <div class="w-full">
+                            <p id="p2-keys-label" class="text-[7px] pixel-font text-slate-500 leading-tight mb-2" data-i18n="p2Keys"></p>
+                        </div>
+                        <button onclick="triggerReadyB()" id="btn-ready-b" class="arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-rose-700 text-white shadow-[2px_2px_0px_0px_#000] hover:bg-rose-600 active:bg-rose-900" data-i18n="p2ReadyHint">
+                            CONFIRM (A)
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="text-center text-[7px] pixel-font text-slate-600 animate-pulse" data-i18n="waitingReady">
+                    * BOTH GUNS MUST BE CONFIRMED TO UNLEASH ARCADE MATH DUEL *
                 </div>
             </div>
 
-            <!-- 2. 倒數計時畫面 -->
-            <div id="screen-countdown" class="hidden flex-col items-center justify-center py-12 space-y-6">
-                <h3 class="text-xl font-bold tracking-wider text-slate-400">準備戰鬥！</h3>
-                <div id="countdown-number" class="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-500 animate-bounce digital-font">
+            <!-- ==================== 2. 倒數計時畫面 ==================== -->
+            <div id="screen-countdown" class="hidden flex-col items-center justify-center py-6 space-y-4 bg-slate-950 border-4 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full max-w-sm">
+                <h3 class="text-xs pixel-font tracking-widest text-slate-400 uppercase" data-i18n="countdownReady">GET READY</h3>
+                <div id="countdown-number" class="text-6xl font-black text-yellow-400 pixel-font transition-all" style="text-shadow: 2px 2px 0px #000;">
                     3
                 </div>
-                <p class="text-sm text-slate-500">集中注意力，隨時準備按下答案！</p>
+                <p class="text-[8px] pixel-font text-slate-500" data-i18n="countdownHands"></p>
             </div>
 
-            <!-- 3. 戰鬥答題畫面 -->
-            <div id="screen-battle" class="hidden space-y-8">
-                <!-- 頂部搶答指示燈 -->
-                <div class="flex justify-between items-center bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-700/50">
-                    <span class="text-xs text-slate-400">玩家 A 搶答區 (1, 2, 3, 4)</span>
-                    <div class="h-3 w-24 bg-slate-700 rounded-full overflow-hidden relative">
-                        <div id="buzz-indicator" class="absolute inset-y-0 w-1/2 bg-slate-500 transition-all duration-150"></div>
-                    </div>
-                    <span class="text-xs text-slate-400">玩家 B 搶答區 (8, 7, 6, 5)</span>
-                </div>
-
-                <!-- 題目顯示區 -->
-                <div class="bg-slate-900/40 border border-slate-700 rounded-2xl p-8 text-center relative overflow-hidden">
-                    <div class="absolute top-2 left-2 text-[10px] text-slate-600 font-mono">MATH BATTLE ENGINE v1.0</div>
-                    <div id="math-question" class="text-4xl md:text-5xl font-black tracking-wide text-white digital-font my-4">
-                        15 + 8 = ?
-                    </div>
-                </div>
-
-                <!-- 選項區 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 選項 A -->
-                    <div id="option-a-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
-                        <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">A</span>
-                            <span id="option-a-text" class="text-xl font-bold text-slate-200">23</span>
-                        </div>
-                        <div class="flex space-x-1 text-[10px]">
-                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 1</span>
-                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 8</span>
-                        </div>
-                    </div>
-
-                    <!-- 選項 B -->
-                    <div id="option-b-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
-                        <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">B</span>
-                            <span id="option-b-text" class="text-xl font-bold text-slate-200">25</span>
-                        </div>
-                        <div class="flex space-x-1 text-[10px]">
-                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 2</span>
-                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 7</span>
-                        </div>
-                    </div>
-
-                    <!-- 選項 C -->
-                    <div id="option-c-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
-                        <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">C</span>
-                            <span id="option-c-text" class="text-xl font-bold text-slate-200">18</span>
-                        </div>
-                        <div class="flex space-x-1 text-[10px]">
-                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 3</span>
-                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 6</span>
-                        </div>
-                    </div>
-
-                    <!-- 選項 D -->
-                    <div id="option-d-box" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200">
-                        <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500 text-indigo-400 font-black flex items-center justify-center text-lg">D</span>
-                            <span id="option-d-text" class="text-xl font-bold text-slate-200">30</span>
-                        </div>
-                        <div class="flex space-x-1 text-[10px]">
-                            <span class="bg-cyan-900/50 border border-cyan-700 text-cyan-400 px-1.5 py-0.5 rounded">A：按 4</span>
-                            <span class="bg-amber-900/50 border border-amber-700 text-amber-400 px-1.5 py-0.5 rounded">B：按 5</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. 結果判定畫面 -->
-            <div id="screen-result" class="hidden text-center py-8 space-y-6">
-                <div id="winner-crown" class="text-6xl animate-bounce">👑</div>
-                <div class="space-y-2">
-                    <h2 id="winner-title" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
-                        玩家 A 獲得勝利！
-                    </h2>
-                    <p id="winner-detail" class="text-slate-300 text-lg">答對了！實至名歸！</p>
-                </div>
+            <!-- ==================== 3. 戰鬥答題畫面 ==================== -->
+            <div id="screen-battle" class="hidden w-full h-full flex flex-col justify-between py-2 space-y-3 relative">
                 
-                <div class="inline-block bg-slate-900/60 border border-slate-700 rounded-2xl px-8 py-6 max-w-md mx-auto space-y-3">
-                    <div class="text-sm text-slate-400">解答回顧</div>
-                    <div id="result-math-formula" class="text-2xl font-bold text-white digital-font">15 + 8 = 23</div>
-                    <div class="text-xs text-slate-500">
-                        答題者：<span id="result-buzzer-name" class="font-bold text-cyan-400">玩家 A</span> | 
-                        選擇答案：<span id="result-selected-option" class="font-bold text-rose-400">A</span>
+                <!-- 頂部巨型雙槍取代原本的計分面板 -->
+                <div class="grid grid-cols-12 items-center bg-slate-950 border-2 border-black px-4 py-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10 gap-2">
+                    
+                    <!-- 左側 1P 巨型槍手面板 -->
+                    <div id="panel-battle-left" class="col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px] transition-all">
+                        <span class="absolute top-1 left-2 text-[6px] pixel-font text-cyan-400">1P WEAPON</span>
+                        <div id="battle-gun-left-container" class="h-28 w-full flex items-center justify-center relative">
+                            <img id="battle-gun-left" src="media/gun L-1.png" alt="Gun Left" class="h-24 object-contain max-w-full transition-transform"
+                                 onerror="handleGunError('left');">
+                            <!-- 特效裝飾疊加層 -->
+                            <div id="left-gun-effect-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- 中央計時面板 -->
+                    <div class="col-span-4 text-center space-y-1.5 px-3">
+                        <span class="text-[8px] text-yellow-400 pixel-font block uppercase tracking-wider" data-i18n="timerLabel">TIMER</span>
+                        <div class="w-full bg-slate-900 h-5 border-2 border-black p-0.5">
+                            <div id="battle-timer-bar" class="h-full bg-cyan-500 transition-all duration-100 w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- 右側 2P 巨型槍手面板 -->
+                    <div id="panel-battle-right" class="col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px] transition-all">
+                        <span class="absolute top-1 right-2 text-[6px] pixel-font text-amber-400">2P WEAPON</span>
+                        <div id="battle-gun-right-container" class="h-28 w-full flex items-center justify-center relative">
+                            <img id="battle-gun-right" src="media/gun R-1.png" alt="Gun Right" class="h-24 object-contain max-w-full transition-transform"
+                                 onerror="handleGunError('right');">
+                            <!-- 特效裝飾疊加層 -->
+                            <div id="right-gun-effect-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none hidden"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 統一題目區塊 -->
+                <div class="bg-black border-4 border-slate-900 py-3 px-6 text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] rounded-lg max-w-4xl w-full mx-auto z-10">
+                    <span class="text-[8px] pixel-font text-slate-500 block mb-1 tracking-widest" data-i18n="solveQuestion">SOLVE THIS QUESTION</span>
+                    <div id="question-text-battle" class="text-xl md:text-3xl font-bold tracking-wide text-white pixel-font">
+                        -- + -- = ?
                     </div>
                 </div>
 
-                <div class="animate-pulse text-amber-400 font-bold text-lg pt-4">
-                    🔥 經典再現！按下 [ 任何按鍵 ] 回到準備畫面
+                <!-- 統一選項按鈕格組 -->
+                <div class="grid grid-cols-2 gap-3 max-w-4xl w-full mx-auto flex-1 items-stretch z-10">
+                    
+                    <button onclick="triggerUnifiedOption('A')" id="btn-opt-A" class="arcade-btn relative bg-slate-900 border-2 border-slate-800 p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between">
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="text-[12px] pixel-font text-yellow-500">A</span>
+                            <span id="val-opt-A" class="text-base sm:text-lg md:text-xl font-bold pixel-font text-white">--</span>
+                        </div>
+                        <!-- 玩家點選標誌插槽 -->
+                        <div id="badges-opt-A" class="flex space-x-1 mt-1 justify-end w-full min-h-[14px]"></div>
+                    </button>
+
+                    <button onclick="triggerUnifiedOption('B')" id="btn-opt-B" class="arcade-btn relative bg-slate-900 border-2 border-slate-800 p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between">
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="text-[12px] pixel-font text-yellow-500">B</span>
+                            <span id="val-opt-B" class="text-base sm:text-lg md:text-xl font-bold pixel-font text-white">--</span>
+                        </div>
+                        <div id="badges-opt-B" class="flex space-x-1 mt-1 justify-end w-full min-h-[14px]"></div>
+                    </button>
+
+                    <button onclick="triggerUnifiedOption('C')" id="btn-opt-C" class="arcade-btn relative bg-slate-900 border-2 border-slate-800 p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between">
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="text-[12px] pixel-font text-yellow-500">C</span>
+                            <span id="val-opt-C" class="text-base sm:text-lg md:text-xl font-bold pixel-font text-white">--</span>
+                        </div>
+                        <div id="badges-opt-C" class="flex space-x-1 mt-1 justify-end w-full min-h-[14px]"></div>
+                    </button>
+
+                    <button onclick="triggerUnifiedOption('D')" id="btn-opt-D" class="arcade-btn relative bg-slate-900 border-2 border-slate-800 p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between">
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="text-[12px] pixel-font text-yellow-500">D</span>
+                            <span id="val-opt-D" class="text-base sm:text-lg md:text-xl font-bold pixel-font text-white">--</span>
+                        </div>
+                        <div id="badges-opt-D" class="flex space-x-1 mt-1 justify-end w-full min-h-[14px]"></div>
+                    </button>
+
                 </div>
+
+                <!-- 底部：戰況即時狀態與雙人 A 鍵返回大廳提示 -->
+                <div class="flex justify-center items-center w-full max-w-5xl mx-auto mt-auto py-3.5 z-10 border-t-2 border-slate-900 bg-slate-950/40">
+                    <div class="flex flex-col justify-center items-center px-6 text-center w-full">
+                        <div id="battle-feedback-title" class="text-[11px] pixel-font text-yellow-400 tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                            DUEL IN PROGRESS!
+                        </div>
+                        <div id="battle-feedback-subtitle" class="text-[7px] pixel-font text-slate-500 mt-1.5 uppercase animate-pulse">
+                            PRESS CORRECT BUTTON FIRST TO DESTROY TARGET
+                        </div>
+                        
+                        <!-- 雙人 A 鍵退回確認之燈號狀態欄 (極致清晰，放大了返場提示字，與主畫面一樣具有街機立體感) -->
+                        <div id="a-press-indicators" class="hidden flex flex-col items-center justify-center mt-3 p-3 bg-slate-950 border-4 border-slate-900 w-full max-w-lg rounded-lg shadow-[4px_4px_0px_0px_#000]">
+                            <h2 class="text-base sm:text-lg md:text-xl font-black text-yellow-400 pixel-font tracking-tight mb-2 animate-pulse" style="text-shadow: 2px 2px 0px #000;" data-i18n="bothConfirmRequired">
+                                BOTH PLAYERS MUST CONFIRM [A] TO RESET TO LOBBY
+                            </h2>
+                            <div class="flex space-x-12 text-[9px] pixel-font py-1">
+                                <span id="p1-a-indicator" class="text-slate-600 transition-colors">🔴 1P A: NOT READY</span>
+                                <span id="p2-a-indicator" class="text-slate-600 transition-colors">🔵 2P A: NOT READY</span>
+                            </div>
+                            
+                            <!-- 手機觸控版專用 A 鍵確認按鍵 -->
+                            <div id="touch-a-confirm-buttons" class="hidden flex justify-center space-x-4 mt-2 w-full">
+                                <button onclick="confirmTouchA('1P')" id="touch-btn-confirm-1p" class="arcade-btn px-4 py-2 bg-cyan-700 hover:bg-cyan-600 border-2 border-black text-white text-[8px] pixel-font rounded shadow-[2px_2px_0px_0px_#000]">
+                                    1P CONFIRM [A]
+                                </button>
+                                <button onclick="confirmTouchA('2P')" id="touch-btn-confirm-2p" class="arcade-btn px-4 py-2 bg-amber-600 hover:bg-amber-500 border-2 border-black text-white text-[8px] pixel-font rounded shadow-[2px_2px_0px_0px_#000]">
+                                    2P CONFIRM [A]
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- 5. 鍵盤確認 (Q暫停) 畫面 -->
-            <div id="screen-keyboard-test" class="hidden space-y-6">
-                <div class="text-center space-y-2">
-                    <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs px-3 py-1 rounded-full font-bold">PAUSE</div>
-                    <h2 class="text-3xl font-black text-white">鍵盤按鍵功能驗證</h2>
-                    <p class="text-slate-400 text-sm">請在鍵盤任意按下雙方的這 8 個按鍵，全數通過即可返回遊戲</p>
+            <!-- ==================== 4. 鍵盤確認 (Q暫停) 畫面 ==================== -->
+            <div id="screen-keyboard-test" class="hidden space-y-4 w-full max-w-3xl bg-slate-950 border-4 border-slate-800 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div class="text-center space-y-1">
+                    <div class="inline-block bg-amber-600 border-2 border-black text-white text-[8px] px-2 py-0.5 font-bold pixel-font">PAUSE</div>
+                    <h2 class="text-sm sm:text-base font-black text-white pixel-font" data-i18n="calibTitle">CONTROLLER CALIBRATION</h2>
+                    <p class="text-slate-400 text-[8px] pixel-font" data-i18n="calibDescr">PRESS ALL 8 BUTTONS TO VERIFY INPUT</p>
                 </div>
 
-                <!-- 整合型進度看板與即時偵測 -->
-                <div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="bg-slate-900 border-2 border-black p-2 flex flex-col md:flex-row items-center justify-between gap-2">
                     <div class="text-center md:text-left">
-                        <span class="text-xs text-slate-400 block">驗證進度</span>
-                        <span id="test-progress-text" class="text-lg font-bold text-cyan-400">已驗證按鍵：0 / 8</span>
+                        <span class="text-[8px] pixel-font text-slate-500 block" data-i18n="calibProg">VERIFICATION PROGRESS</span>
+                        <span id="test-progress-text" class="text-xs font-bold text-cyan-400 pixel-font">0 / 8 VERIFIED</span>
                     </div>
-                    <div class="flex-1 w-full max-w-md bg-slate-800 rounded-full h-4 overflow-hidden p-0.5 border border-slate-700">
-                        <div id="test-progress-bar" class="bg-gradient-to-r from-cyan-500 to-amber-500 h-full rounded-full transition-all duration-300 w-0"></div>
+                    <div class="flex-1 w-full max-w-xs bg-black border-2 border-black h-5 p-0.5">
+                        <div id="test-progress-bar" class="bg-gradient-to-r from-cyan-500 to-amber-500 h-full transition-all duration-300 w-0"></div>
                     </div>
-                    <div class="bg-slate-800/80 px-4 py-2.5 rounded-xl border border-slate-700 text-sm font-semibold min-w-[210px] text-center">
-                        <span class="text-[10px] text-slate-400 block leading-tight">即時輸入偵測</span>
-                        <span id="test-last-pressed" class="text-amber-400 font-bold">等待按鍵中...</span>
+                    <div class="bg-black px-3 py-1.5 border-2 border-black text-[9px] min-w-[140px] text-center">
+                        <span class="text-[7px] pixel-font text-slate-500 block leading-tight" data-i18n="detecting">DETECTING...</span>
+                        <span id="test-last-pressed" class="text-amber-400 font-bold pixel-font">STANDBY</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 玩家 A 鍵盤檢測 -->
-                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 relative">
-                        <h3 class="text-lg font-bold text-cyan-400 mb-3 flex items-center justify-between">
-                            <span>🔴 玩家 A</span>
-                            <span class="text-xs text-slate-500">按鍵 1, 2, 3, 4</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 1P -->
+                    <div class="bg-slate-900/60 border-2 border-black p-3 relative shadow-[2px_2px_0px_0px_#06b6d4]">
+                        <h3 class="text-[9px] font-bold text-cyan-400 mb-2 flex items-center justify-between pixel-font">
+                            <span data-i18n="p1Controller">🔴 1P CONTROLLER</span>
                         </h3>
-                        <div class="grid grid-cols-4 gap-2">
-                            <div id="test-a-1" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 1</span>
-                                <span class="text-lg font-black text-slate-400">A</span>
+                        <div class="grid grid-cols-4 gap-1">
+                            <div id="test-a-1" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">1P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">A</span>
                             </div>
-                            <div id="test-a-2" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 2</span>
-                                <span class="text-lg font-black text-slate-400">B</span>
+                            <div id="test-a-2" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">1P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">B</span>
                             </div>
-                            <div id="test-a-3" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 3</span>
-                                <span class="text-lg font-black text-slate-400">C</span>
+                            <div id="test-a-3" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">1P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">C</span>
                             </div>
-                            <div id="test-a-4" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 4</span>
-                                <span class="text-lg font-black text-slate-400">D</span>
+                            <div id="test-a-4" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">1P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">D</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 玩家 B 鍵盤檢測 -->
-                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 relative">
-                        <h3 class="text-lg font-bold text-amber-400 mb-3 flex items-center justify-between">
-                            <span>🔵 玩家 B</span>
-                            <span class="text-xs text-slate-500">按鍵 8, 7, 6, 5</span>
+                    <!-- 2P -->
+                    <div class="bg-slate-900/60 border-2 border-black p-3 relative shadow-[2px_2px_0px_0px_#f59e0b]">
+                        <h3 class="text-[9px] font-bold text-amber-400 mb-2 flex items-center justify-between pixel-font">
+                            <span data-i18n="p2Controller">🔵 2P CONTROLLER</span>
                         </h3>
-                        <div class="grid grid-cols-4 gap-2">
-                            <div id="test-b-8" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 8</span>
-                                <span class="text-lg font-black text-slate-400">A</span>
+                        <div class="grid grid-cols-4 gap-1">
+                            <div id="test-b-8" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">2P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">A</span>
                             </div>
-                            <div id="test-b-7" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 7</span>
-                                <span class="text-lg font-black text-slate-400">B</span>
+                            <div id="test-b-7" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">2P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">B</span>
                             </div>
-                            <div id="test-b-6" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 6</span>
-                                <span class="text-lg font-black text-slate-400">C</span>
+                            <div id="test-b-6" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">2P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">C</span>
                             </div>
-                            <div id="test-b-5" class="border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200">
-                                <span class="text-xs text-slate-500 block">鍵 5</span>
-                                <span class="text-lg font-black text-slate-400">D</span>
+                            <div id="test-b-5" class="border-2 border-black bg-slate-950 p-1.5 text-center transition-all">
+                                <span class="text-[6px] pixel-font text-slate-500 block">2P</span>
+                                <span class="text-xs font-black text-slate-500 pixel-font">D</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-center text-xs text-slate-500 animate-pulse">
-                    💡 只要這 8 個按鍵至少被按過一次，就會自動返回準備起始畫面。
+                <div class="flex space-x-2">
+                    <button onclick="resumeGame()" class="arcade-btn flex-1 py-2 text-[9px] pixel-font bg-slate-800 hover:bg-slate-750 text-slate-300 border-2 border-black shadow-[2px_2px_0px_0px_#000]" data-i18n="continueBtn">
+                        ↩️ CONTINUE
+                    </button>
+                    <button onclick="initSetup()" class="arcade-btn flex-1 py-2 text-[9px] pixel-font bg-rose-900 hover:bg-rose-800 text-rose-300 border-2 border-black shadow-[2px_2px_0px_0px_#000]" data-i18n="retireBtn">
+                        🏠 RETIRE & HOME
+                    </button>
                 </div>
             </div>
 
-        </div>
-    </main>
+            <!-- ==================== 5. 街機設定面板 (SETTINGS MODAL) ==================== -->
+            <div id="modal-settings" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+                <div class="bg-slate-950 border-8 border-slate-900 shadow-[6px_6px_0px_0px_#06b6d4] max-w-2xl w-full p-4 space-y-4 max-h-[95vh] overflow-y-auto relative">
+                    
+                    <!-- 右上角固定返回 X 按鍵 -->
+                    <button id="btn-modal-close-icon" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-rose-950 border-2 border-black text-rose-400 font-bold hover:bg-rose-900 active:translate-y-0.5 arcade-btn" style="box-shadow: 2px 2px 0px 0px #000;" title="Return to game / 返回遊戲">
+                        ❌
+                    </button>
 
-    <!-- 底部操作提示 -->
-    <footer class="bg-slate-900/60 py-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
-        <div>MATH BATTLE © 雙人同屏極速數學挑戰賽</div>
-    </footer>
+                    <div class="text-center border-b-2 border-slate-900 pb-2">
+                        <h2 class="text-xs sm:text-sm pixel-font text-cyan-400 uppercase tracking-wider" data-i18n="settingsTitle">ARCADE SYSTEM SETUP</h2>
+                        <p class="text-[6px] pixel-font text-slate-500 mt-0.5" data-i18n="autoSaveStatus">MAINBOARD VERSION v4.0 • AUTO SAVING</p>
+                    </div>
+
+                    <!-- 1. 語系選擇 -->
+                    <div class="space-y-1.5">
+                        <label class="text-[8px] pixel-font text-yellow-400 block" data-i18n="langLabel">SYSTEM LANGUAGE</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setLanguage('zh')" id="lang-zh" class="arcade-btn py-1.5 text-[8px] pixel-font border-2 border-black bg-cyan-700 text-white shadow-[2px_2px_0px_0px_#000]">
+                                繁體中文
+                            </button>
+                            <button onclick="setLanguage('en')" id="lang-en" class="arcade-btn py-1.5 text-[8px] pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]">
+                                ENGLISH
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 音效與BGM音量 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-900 p-3 border-2 border-black">
+                        <!-- SFX -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[8px] pixel-font text-indigo-400">
+                                <span data-i18n="sfxLabel">SFX VOLUME (RELEASE TO PREVIEW)</span>
+                                <span id="lbl-sfx-vol">50%</span>
+                            </div>
+                            <input type="range" id="slider-sfx" min="0" max="100" value="50" class="w-full">
+                        </div>
+                        <!-- BGM -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[8px] pixel-font text-indigo-400">
+                                <span data-i18n="bgmLabel">BGM VOLUME</span>
+                                <span id="lbl-bgm-vol">50%</span>
+                            </div>
+                            <input type="range" id="slider-bgm" min="0" max="100" value="50" class="w-full">
+                        </div>
+                    </div>
+
+                    <!-- 3. 難度調整 -->
+                    <div class="space-y-2">
+                        <label class="text-[9px] pixel-font text-cyan-400 block" data-i18n="difficulty">DIFFICULTY</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <button onclick="setDifficulty('easy')" id="set-diff-easy" class="arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="easy">
+                                EASY
+                            </button>
+                            <button onclick="setDifficulty('medium')" id="set-diff-medium" class="arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="normal">
+                                NORMAL
+                            </button>
+                            <button onclick="setDifficulty('hard')" id="set-diff-hard" class="arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="hard">
+                                HARD
+                            </button>
+                            <button onclick="setDifficulty('hell')" id="set-diff-hell" class="arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]" data-i18n="hell">
+                                HELL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. 遊戲規則 -->
+                    <div class="space-y-1">
+                        <label class="text-[8px] pixel-font text-amber-500 block" data-i18n="rulesLabel">GAME RULES說明</label>
+                        <div class="bg-black border-4 border-slate-900 p-4 h-72 overflow-y-auto text-lg font-mono leading-relaxed text-emerald-400" id="rules-box">
+                            <!-- 規則內容將動態渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 底部裝飾與版權宣告 -->
+        <footer class="bg-slate-950 py-2.5 text-center text-[7px] pixel-font text-slate-600 border-t-4 border-slate-900">
+            <div>MATH BATTLE ARCADE © 1986-2026 CO. LTD. ALL RIGHTS RESERVED</div>
+        </footer>
+
+    </div>
 
     <!-- 邏輯腳本 -->
     <script>
-        // 遊戲狀態機
-        // STATES: 'SETUP', 'COUNTDOWN', 'BATTLE', 'RESULT', 'KEYBOARD_TEST'
-        let currentGameState = 'SETUP';
+        const langData = {
+            zh: {
+                pauseBtn: "暫停 [Q]",
+                insertCoin: "按下 [A] 開始",
+                setupDescr: "確認解鎖兩側光線槍並開始遊戲",
+                difficulty: "難易度選擇",
+                easy: "簡單",
+                normal: "普通",
+                hard: "困難",
+                hell: "地獄",
+                p1Label: "1P 槍手",
+                p2Label: "2P 槍手",
+                p1Keys: "",
+                p2Keys: "",
+                p1ReadyHint: "確認 A 鍵",
+                p2ReadyHint: "確認 A 鍵",
+                waitingReady: "* 雙方光線槍皆點亮解鎖後，生死鬥將自動開始 *",
+                countdownReady: "預備起...",
+                countdownHands: "",
+                scoreLabel1p: "1P 戰況",
+                scoreLabel2p: "2P 戰況",
+                timerLabel: "限時十秒",
+                battleHeader1p: "🔴 1P 區塊",
+                battleHeader2p: "🔵 2P 區塊",
+                solveQuestion: "快速算出此題解答",
+                lockoutText1p: "1P 答錯鎖定！",
+                lockoutText2p: "2P 答錯鎖定！",
+                lockoutWaiting1p: "",
+                lockoutWaiting2p: "",
+                finalScoreLabel: "生死一局終戰",
+                playAgain: "重新開始",
+                calibTitle: "按鈕輸入校準",
+                calibDescr: "請按完所有按鍵以驗證主機",
+                calibProg: "主機驗證進度",
+                detecting: "偵測中...",
+                p1Controller: "🔴 1P 控制器",
+                p2Controller: "🔵 2P 控制器",
+                continueBtn: "↩️ 繼續對決",
+                retireBtn: "🏠 回到大廳",
+                settingsTitle: "街機主板系統設定",
+                langLabel: "SYSTEM LANGUAGE",
+                rulesLabel: "對戰規則指南",
+                sfxLabel: "SFX 音效音量 (放開預覽音量)",
+                bgmLabel: "BGM 音量",
+                gunLobbyStatus: "光線槍主機正常",
+                gunLobbyInstruction: "",
+                arcadeFormat: "一局定生死",
+                autoSaveStatus: "SYSTEM BOARD v4.0 • 自動儲存",
+                bothConfirmRequired: "按下 [A] 鍵回主畫面",
+                rulesText: "1. 🔫 <b>畫面上會出現一題數學問題</b>：雙方槍手集中腦力快速運算！限時 10 秒。<br>2. ⚡ <b>最快答對的一擊必殺</b>：第一個點選正確答案的玩家獲勝！<br>3. ☠️ <b>搶答答錯的炸膛失敗</b>：如果搶快作答卻算錯，手槍當場炸膛，宣告由對手獲勝！"
+            },
+            en: {
+                pauseBtn: "PAUSE [Q]",
+                insertCoin: "PRESS [A] TO START",
+                setupDescr: "CONFIRM BOTH GUNS TO START THE GAME",
+                difficulty: "DIFFICULTY SELECTION",
+                easy: "EASY",
+                normal: "NORMAL",
+                hard: "HARD",
+                hell: "HELL",
+                p1Label: "1P_PLAYER",
+                p2Label: "2P_PLAYER",
+                p1Keys: "",
+                p2Keys: "",
+                p1ReadyHint: "CONFIRM (A)",
+                p2ReadyHint: "CONFIRM (A)",
+                waitingReady: "* BOTH GUNS MUST BE REVEALED TO DEPLOY MATCH *",
+                countdownReady: "GET READY...",
+                countdownHands: "",
+                scoreLabel1p: "1P STATUS",
+                scoreLabel2p: "2P STATUS",
+                timerLabel: "10 SECONDS",
+                battleHeader1p: "🔴 1P SECTION",
+                battleHeader2p: "🔵 2P SECTION",
+                solveQuestion: "SOLVE THIS QUESTION",
+                lockoutText1p: "1P LOCKOUT!",
+                lockoutText2p: "2P LOCKOUT!",
+                lockoutWaiting1p: "",
+                lockoutWaiting2p: "",
+                finalScoreLabel: "SINGLE-ROUND DECISION",
+                playAgain: "RESTART",
+                calibTitle: "BUTTON INPUT CALIBRATION",
+                calibDescr: "PLEASE PRESS ALL BUTTONS TO VERIFY HARDWARE",
+                calibProg: "SYSTEM VERIFICATION PROGRESS",
+                detecting: "DETECTING...",
+                p1Controller: "🔴 1P CONTROLLER",
+                p2Controller: "🔵 2P CONTROLLER",
+                continueBtn: "↩️ CONTINUE DUEL",
+                retireBtn: "🏠 BACK TO LOBBY",
+                settingsTitle: "ARCADE MAINBOARD SETTINGS",
+                langLabel: "SYSTEM LANGUAGE",
+                rulesLabel: "RULES GUIDE",
+                sfxLabel: "SFX VOLUME (RELEASE TO PREVIEW)",
+                bgmLabel: "BGM VOLUME",
+                gunLobbyStatus: "WEAPONS ONLINE",
+                gunLobbyInstruction: "",
+                arcadeFormat: "1-ROUND MATCH",
+                autoSaveStatus: "SYSTEM BOARD v4.0 • AUTO SAVING",
+                bothConfirmRequired: "BOTH PLAYERS MUST CONFIRM [A] TO RESET LOBBY",
+                rulesText: "1. 🔫 <b>A math question will appear on screen</b>: Both gunners focus and calculate fast! 10 seconds limit.<br>2. ⚡ <b>Fastest correct shot wins</b>: The first player to select the correct answer wins!<br>3. ☠️ <b>Backfire defeat</b>: If you rush to answer but get it wrong, your weapon instantly backfires, granting victory to your opponent!"
+            }
+        };
 
-        // 玩家準備狀態
+        const bgmLobby = new Audio('media/BGM-1 Eric Skiff - A Night Of Dizzy Spells.mp3');
+        bgmLobby.loop = true;
+        bgmLobby.preload = 'auto';
+
+        const bgmBattle = new Audio('media/BGM-2 Eric Skiff - Underclocked.mp3');
+        bgmBattle.loop = true;
+        bgmBattle.preload = 'auto';
+
+        let currentBgmTrack = 'lobby'; 
+
+        let currentLang = 'zh';
+        let currentGameState = 'SETUP';
+        let previousGameState = 'SETUP'; 
+
         let playerAReady = false;
         let playerBReady = false;
 
-        // 題目與解答資訊
+        let scoreA = 0;
+        let scoreB = 0;
+        let difficulty = 'medium'; 
+
         let currentQuestion = {
             formula: '',
             options: { A: 0, B: 0, C: 0, D: 0 },
-            correctAnswer: 'A' // A, B, C, D
+            correctAnswer: 'A', 
+            correctValue: 0
         };
 
-        // 搶答狀態
-        let hasBuzzed = false;
-        let countdownTimer = null;
+        let firstShotFired = false;        
+        let showResultsRevealed = false;   
+        let firstResponder = null;         
+        let p1Answer = null;               
+        let p2Answer = null;               
+        let p1Shot = false;                
+        let p2Shot = false;                
 
-        // 鍵盤測試狀態 (扁平化管理 8 個按鍵)
+        let waitingForBothA = false;       
+        let p1PressedAInResult = false;    
+        let p2PressedAInResult = false;    
+
+        let countdownTimer = null;
+        let battleTimer = null;
+        let battleTimeLeft = 100;          
+
         let testKeysState = {
             '1': false, '2': false, '3': false, '4': false,
             '5': false, '6': false, '7': false, '8': false
         };
 
-        // Web Audio 音效產生器
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
+        let audioCtx = null;
+        let sfxVolume = 0.5;               
+        let bgmVolume = 0.125;             
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTrack(track) {
+            if (currentBgmTrack === track) {
+                if (track === 'lobby' && !bgmLobby.paused) return;
+                if (track === 'battle' && !bgmBattle.paused) return;
+            }
+
+            currentBgmTrack = track;
+
+            bgmLobby.pause();
+            bgmBattle.pause();
+
+            if (bgmVolume <= 0) return;
+
+            const safeVolume = Math.max(0, Math.min(1, bgmVolume));
+            if (track === 'lobby') {
+                bgmLobby.volume = safeVolume;
+                bgmLobby.currentTime = 0;
+                bgmLobby.play().catch(e => console.log("Lobby BGM play deferred:", e));
+            } else if (track === 'battle') {
+                bgmBattle.volume = safeVolume;
+                bgmBattle.currentTime = 0;
+                bgmBattle.play().catch(e => console.log("Battle BGM play deferred:", e));
+            }
+        }
+
+        function updateBGMVolume() {
+            const safeVolume = Math.max(0, Math.min(1, bgmVolume));
+            bgmLobby.volume = safeVolume;
+            bgmBattle.volume = safeVolume;
+
+            if (safeVolume > 0) {
+                if (currentBgmTrack === 'lobby' && bgmLobby.paused) {
+                    bgmLobby.play().catch(e => {});
+                } else if (currentBgmTrack === 'battle' && bgmBattle.paused) {
+                    bgmBattle.play().catch(e => {});
+                }
+            } else {
+                bgmLobby.pause();
+                bgmBattle.pause();
+            }
+        }
+
+        function handleGunError(side) {
+            const containerSetup = document.getElementById(`gun-${side}-container`);
+            if (containerSetup) {
+                const text = side === 'left' ? '一號玩家' : '二號玩家';
+                const color = side === 'left' ? 'text-cyan-400 animate-pulse' : 'text-amber-400 animate-pulse';
+                containerSetup.innerHTML = `<span class="${color} pixel-font text-base font-bold tracking-widest">${text}</span>`;
+            }
+
+            const containerBattle = document.getElementById(`battle-gun-${side}-container`);
+            if (containerBattle) {
+                const text = side === 'left' ? '1P WEAPON' : '2P WEAPON';
+                const color = side === 'left' ? 'text-cyan-400' : 'text-amber-400';
+                containerBattle.innerHTML = `<span class="${color} pixel-font text-xs font-bold tracking-wide">${text}</span>`;
+            }
+        }
+
+        function handleGlobalUserInteraction() {
+            initAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if (bgmVolume > 0) {
+                if (currentBgmTrack === 'lobby' && bgmLobby.paused) {
+                    bgmLobby.play().catch(e => {});
+                } else if (currentBgmTrack === 'battle' && bgmBattle.paused) {
+                    bgmBattle.play().catch(e => {});
+                }
+            }
+        }
+        window.addEventListener('click', handleGlobalUserInteraction);
+        window.addEventListener('keydown', handleGlobalUserInteraction);
+
         function playSound(type) {
+            if (type === 'gunshot') {
+                try {
+                    const gunAudio = new Audio('media/gunshot.mp3');
+                    gunAudio.volume = sfxVolume;
+                    gunAudio.play().catch(err => {
+                        console.log("Audio play blocked/failed:", err);
+                        playSynthGunshotFallback();
+                    });
+                } catch(e) {
+                    console.log("Audio constructor err:", e);
+                    playSynthGunshotFallback();
+                }
+                return;
+            }
+
             try {
+                initAudio();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
 
+                const vol = Math.pow(sfxVolume, 2);
+
                 if (type === 'tick') {
-                    // 倒數計時滴答聲
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.12);
-                } else if (type === 'start') {
-                    // 遊戲開始音效
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime); 
+                    gain.gain.setValueAtTime(vol * 0.4, audioCtx.currentTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
-                } else if (type === 'correct') {
-                    // 答對音效
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
-                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
-                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.24); // C6
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.45);
-                } else if (type === 'wrong') {
-                    // 答錯/炸膛音效
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'start') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); 
+                    osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime + 0.16); 
+                    gain.gain.setValueAtTime(vol * 0.5, audioCtx.currentTime); 
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'correct') {
+                    osc.type = 'square';
+                    const baseTime = audioCtx.currentTime;
+                    osc.frequency.setValueAtTime(523.25, baseTime); 
+                    osc.frequency.setValueAtTime(659.25, baseTime + 0.06); 
+                    osc.frequency.setValueAtTime(783.99, baseTime + 0.12); 
+                    osc.frequency.setValueAtTime(1046.50, baseTime + 0.18); 
+                    osc.frequency.setValueAtTime(1318.51, baseTime + 0.24); 
+                    gain.gain.setValueAtTime(vol * 0.45, baseTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, baseTime + 0.45);
+                    osc.start();
+                    osc.stop(baseTime + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(vol * 0.55, audioCtx.currentTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.45);
                 } else if (type === 'click') {
-                    // 準備/按鍵音效
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(330, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(vol * 0.5, audioCtx.currentTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.08);
                 }
             } catch (e) {
-                console.log("Audio not allowed yet or error: ", e);
+                console.log("Synth Sound block error:", e);
             }
         }
 
-        // DOM 元素快取
+        function playSynthGunshotFallback() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.25);
+                gain.gain.setValueAtTime(Math.pow(sfxVolume, 2) * 0.8, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.28);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        function playSynthExplosion() {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const baseTime = audioCtx.currentTime;
+                
+                const bufferSize = audioCtx.sampleRate * 0.4;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(260, baseTime);
+                filter.frequency.exponentialRampToValueAtTime(12, baseTime + 0.35);
+
+                const gain = audioCtx.createGain();
+                const vol = Math.pow(sfxVolume, 2);
+                gain.gain.setValueAtTime(vol * 1.3, baseTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, baseTime + 0.38);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noise.start(baseTime);
+                noise.stop(baseTime + 0.4);
+            } catch(e) {
+                console.log("Synth explosion failed:", e);
+            }
+        }
+
         const screens = {
             setup: document.getElementById('screen-setup'),
             countdown: document.getElementById('screen-countdown'),
             battle: document.getElementById('screen-battle'),
-            result: document.getElementById('screen-result'),
             keyTest: document.getElementById('screen-keyboard-test')
         };
 
-        const readyStatuses = {
-            a: document.getElementById('status-ready-a'),
-            b: document.getElementById('status-ready-b')
-        };
+        function setLanguage(lang) {
+            currentLang = lang;
+            
+            const btnZh = document.getElementById('lang-zh');
+            const btnEn = document.getElementById('lang-en');
 
-        const panels = {
-            a: document.getElementById('panel-player-a'),
-            b: document.getElementById('panel-player-b')
-        };
+            [btnZh, btnEn].forEach(btn => {
+                if (btn) {
+                    btn.className = "arcade-btn py-1.5 text-[8px] pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]";
+                }
+            });
 
-        // 切換畫面函數
+            const activeBtn = document.getElementById(`lang-${lang}`);
+            if (activeBtn) {
+                activeBtn.className = "arcade-btn py-1.5 text-[8px] pixel-font border-2 border-black bg-cyan-700 text-white shadow-[2px_2px_0px_0px_#000]";
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (langData[lang][key]) {
+                    el.innerHTML = langData[lang][key];
+                }
+            });
+
+            document.getElementById('rules-box').innerHTML = langData[lang].rulesText;
+            playSound('click');
+        }
+
         function changeScreen(targetState) {
             currentGameState = targetState;
             Object.keys(screens).forEach(key => {
@@ -420,67 +973,151 @@
                 screens.countdown.classList.remove('hidden');
             } else if (targetState === 'BATTLE') {
                 screens.battle.classList.remove('hidden');
-            } else if (targetState === 'RESULT') {
-                screens.result.classList.remove('hidden');
             } else if (targetState === 'KEYBOARD_TEST') {
                 screens.keyTest.classList.remove('hidden');
             }
         }
 
-        // 初始化遊戲與準備畫面
+        function setDifficulty(level) {
+            playSound('click');
+            difficulty = level;
+            
+            const allLevels = ['easy', 'medium', 'hard', 'hell'];
+            allLevels.forEach(item => {
+                const btnMain = document.getElementById(`diff-${item}`);
+                const btnSet = document.getElementById(`set-diff-${item}`);
+                
+                if (item === level) {
+                    if (btnMain) btnMain.className = "arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-cyan-700 text-white shadow-[2px_2px_0px_0px_#000]";
+                    if (btnSet) btnSet.className = "arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-cyan-700 text-white shadow-[2px_2px_0px_0px_#000]";
+                } else {
+                    if (btnMain) btnMain.className = "arcade-btn py-3 px-6 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]";
+                    if (btnSet) btnSet.className = "arcade-btn py-3 text-[9px] md:text-xs pixel-font border-2 border-black bg-slate-800 text-slate-400 shadow-[2px_2px_0px_0px_#000]";
+                }
+            });
+        }
+
         function initSetup() {
             playerAReady = false;
             playerBReady = false;
-            hasBuzzed = false;
+            scoreA = 0;
+            scoreB = 0;
 
-            // 更新 UI 狀態
-            readyStatuses.a.textContent = '尚未準備';
-            readyStatuses.a.className = "py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400";
-            panels.a.className = "bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden";
+            firstShotFired = false;
+            showResultsRevealed = false;
+            firstResponder = null;
+            p1Answer = null;
+            p2Answer = null;
+            p1Shot = false;
+            p2Shot = false;
 
-            readyStatuses.b.textContent = '尚未準備';
-            readyStatuses.b.className = "py-4 rounded-xl text-lg font-bold transition-all border border-rose-500/30 bg-rose-500/10 text-rose-400";
-            panels.b.className = "bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden";
+            waitingForBothA = false;
+            p1PressedAInResult = false;
+            p2PressedAInResult = false;
 
-            // 重設按鍵檢測狀態
+            clearInterval(countdownTimer);
+            clearInterval(battleTimer);
+
+            const gunLSetup = document.getElementById('gun-left');
+            if (gunLSetup) gunLSetup.className = "gun-silhouette h-40 object-contain w-auto";
+            const gunLBattle = document.getElementById('battle-gun-left');
+            if (gunLBattle) gunLBattle.src = "media/gun L-1.png";
+
+            const gunRSetup = document.getElementById('gun-right');
+            if (gunRSetup) gunRSetup.className = "gun-silhouette h-40 object-contain w-auto";
+            const gunRBattle = document.getElementById('battle-gun-right');
+            if (gunRBattle) gunRBattle.src = "media/gun R-1.png";
+
+            const panelL = document.getElementById('panel-battle-left');
+            const panelR = document.getElementById('panel-battle-right');
+            if (panelL) panelL.className = "col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px]";
+            if (panelR) panelR.className = "col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px]";
+
+            const overlayL = document.getElementById('left-gun-effect-overlay');
+            const overlayR = document.getElementById('right-gun-effect-overlay');
+            if (overlayL) { overlayL.innerHTML = ""; overlayL.classList.add('hidden'); }
+            if (overlayR) { overlayR.innerHTML = ""; overlayR.classList.add('hidden'); }
+
+            const btnA = document.getElementById('btn-ready-a');
+            if (btnA) {
+                btnA.textContent = currentLang === 'zh' ? '確認 A 鍵' : 'CONFIRM (A)';
+                btnA.className = "arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-rose-700 text-white shadow-[2px_2px_0px_0px_#000] hover:bg-rose-600 active:bg-rose-900";
+            }
+            const panelA = document.getElementById('panel-player-a');
+            if (panelA) {
+                panelA.className = "col-span-4 bg-slate-900 border-2 border-black p-3 shadow-[3px_3px_0px_0px_#06b6d4] flex flex-col justify-between items-center text-center";
+            }
+
+            const btnB = document.getElementById('btn-ready-b');
+            if (btnB) {
+                btnB.textContent = currentLang === 'zh' ? '確認 A 鍵' : 'CONFIRM (A)';
+                btnB.className = "arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-rose-700 text-white shadow-[2px_2px_0px_0px_#000] hover:bg-rose-600 active:bg-rose-900";
+            }
+            const panelB = document.getElementById('panel-player-b');
+            if (panelB) {
+                panelB.className = "col-span-4 bg-slate-900 border-2 border-black p-3 shadow-[3px_3px_0px_0px_#f59e0b] flex flex-col justify-between items-center text-center transition-all";
+            }
+
+            document.getElementById('a-press-indicators').classList.add('hidden');
+            document.getElementById('touch-a-confirm-buttons').classList.add('hidden');
+
             testKeysState = {
                 '1': false, '2': false, '3': false, '4': false,
                 '5': false, '6': false, '7': false, '8': false
             };
 
             changeScreen('SETUP');
+            playTrack('lobby');
         }
 
-        // 觸發玩家 A 準備
         function triggerReadyA() {
             if (playerAReady) return;
             playerAReady = true;
             playSound('click');
-            readyStatuses.a.textContent = '準備就緒！';
-            readyStatuses.a.className = "py-4 rounded-xl text-lg font-bold transition-all border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 animate-pulse";
-            panels.a.className = "bg-slate-800/80 border-2 border-cyan-500/50 rounded-2xl p-6 scale-[1.02] shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all duration-300 relative overflow-hidden";
+            playTrack('lobby'); 
+            
+            const gunL = document.getElementById('gun-left');
+            if (gunL) {
+                gunL.className = "gun-silhouette gun-unlocked h-40 object-contain w-auto";
+            }
+
+            const btnA = document.getElementById('btn-ready-a');
+            if (btnA) {
+                btnA.textContent = currentLang === 'zh' ? '1P 已鎖定！' : '1P WEAPON READY!';
+                btnA.className = "arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-emerald-600 text-white shadow-[2px_2px_0px_0px_#000]";
+            }
+            
             checkBothReady();
         }
 
-        // 觸發玩家 B 準備
         function triggerReadyB() {
             if (playerBReady) return;
             playerBReady = true;
             playSound('click');
-            readyStatuses.b.textContent = '準備就緒！';
-            readyStatuses.b.className = "py-4 rounded-xl text-lg font-bold transition-all border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 animate-pulse";
-            panels.b.className = "bg-slate-800/80 border-2 border-amber-500/50 rounded-2xl p-6 scale-[1.02] shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all duration-300 relative overflow-hidden";
+            playTrack('lobby');
+
+            const gunR = document.getElementById('gun-right');
+            if (gunR) {
+                gunR.className = "gun-silhouette gun-unlocked-right h-40 object-contain w-auto";
+            }
+
+            const btnB = document.getElementById('btn-ready-b');
+            if (btnB) {
+                btnB.textContent = currentLang === 'zh' ? '2P 已鎖定！' : '2P WEAPON READY!';
+                btnB.className = "arcade-btn w-full py-2.5 text-[8px] pixel-font border-2 border-black bg-emerald-600 text-white shadow-[2px_2px_0px_0px_#000]";
+            }
+
             checkBothReady();
         }
 
-        // 檢查雙方是否都準備完畢
         function checkBothReady() {
             if (playerAReady && playerBReady) {
-                startCountdown();
+                setTimeout(() => {
+                    startCountdown();
+                }, 400); 
             }
         }
 
-        // 倒數 3 秒開始遊戲
         function startCountdown() {
             changeScreen('COUNTDOWN');
             let count = 3;
@@ -503,35 +1140,146 @@
             }, 1000);
         }
 
-        // 產生一道隨機的二位數加減乘除數學題
         function generateMathQuestion() {
-            const types = ['+', '-', '*'];
-            const type = types[Math.floor(Math.random() * types.length)];
-            let num1, num2, formula, answer;
+            let num1, num2, num3, formula, answer;
 
-            if (type === '+') {
-                num1 = Math.floor(Math.random() * 80) + 11; // 11 ~ 90
-                num2 = Math.floor(Math.random() * 80) + 11;
-                formula = `${num1} + ${num2}`;
-                answer = num1 + num2;
-            } else if (type === '-') {
-                num1 = Math.floor(Math.random() * 80) + 20; // 20 ~ 99
-                num2 = Math.floor(Math.random() * (num1 - 5)) + 5; // 保證正數且不為零
-                formula = `${num1} - ${num2}`;
-                answer = num1 - num2;
-            } else { // 乘法
-                num1 = Math.floor(Math.random() * 12) + 3; // 3 ~ 14
-                num2 = Math.floor(Math.random() * 12) + 3; // 3 ~ 14
-                formula = `${num1} × ${num2}`;
-                answer = num1 * num2;
+            if (difficulty === 'easy') {
+                const isAdd = Math.random() > 0.5;
+                if (isAdd) {
+                    num1 = Math.floor(Math.random() * 15) + 1; 
+                    num2 = Math.floor(Math.random() * 10) + 1; 
+                    formula = `${num1} + ${num2}`;
+                    answer = num1 + num2;
+                } else {
+                    num1 = Math.floor(Math.random() * 18) + 10; 
+                    num2 = Math.floor(Math.random() * 9) + 1; 
+                    formula = `${num1} - ${num2}`;
+                    answer = num1 - num2;
+                }
+            } else if (difficulty === 'medium') {
+                const types = ['+', '-', '*', '/'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                if (type === '+') {
+                    num1 = Math.floor(Math.random() * 60) + 15; 
+                    num2 = Math.floor(Math.random() * 35) + 10;
+                    formula = `${num1} + ${num2}`;
+                    answer = num1 + num2;
+                } else if (type === '-') {
+                    num1 = Math.floor(Math.random() * 85) + 15; 
+                    num2 = Math.floor(Math.random() * (num1 - 5)) + 5; 
+                    formula = `${num1} - ${num2}`;
+                    answer = num1 - num2;
+                } else if (type === '*') {
+                    num1 = Math.floor(Math.random() * 8) + 2; 
+                    num2 = Math.floor(Math.random() * 8) + 2; 
+                    formula = `${num1} × ${num2}`;
+                    answer = num1 * num2;
+                } else {
+                    num2 = Math.floor(Math.random() * 7) + 2; 
+                    answer = Math.floor(Math.random() * 9) + 2; 
+                    num1 = num2 * answer;
+                    formula = `${num1} ÷ ${num2}`;
+                }
+            } else if (difficulty === 'hard') {
+                const types = ['mix', '*', '/'];
+                const type = types[Math.floor(Math.random() * types.length)];
+
+                if (type === 'mix') {
+                    num1 = Math.floor(Math.random() * 40) + 10;
+                    num2 = Math.floor(Math.random() * 20) + 5;
+                    num3 = Math.floor(Math.random() * 15) + 2;
+                    const op1 = Math.random() > 0.5 ? '+' : '-';
+                    const op2 = Math.random() > 0.5 ? '+' : '-';
+                    
+                    formula = `${num1} ${op1} ${num2} ${op2} ${num3}`;
+                    answer = eval(formula);
+                } else if (type === '*') {
+                    num1 = Math.floor(Math.random() * 12) + 11; 
+                    num2 = Math.floor(Math.random() * 8) + 3;  
+                    formula = `${num1} × ${num2}`;
+                    answer = num1 * num2;
+                } else {
+                    num2 = Math.floor(Math.random() * 12) + 3; 
+                    answer = Math.floor(Math.random() * 12) + 3; 
+                    num1 = num2 * answer;
+                    formula = `${num1} ÷ ${num2}`;
+                }
+            } else {
+                let subType = Math.floor(Math.random() * 4);
+                if (subType === 0) {
+                    let base = Math.floor(Math.random() * 7) + 2; 
+                    let exp = Math.random() > 0.75 ? 3 : 2; 
+                    let symbol = exp === 2 ? '²' : '³';
+                    let num = Math.floor(Math.random() * 15) + 2;
+                    let isAdd = Math.random() > 0.5;
+                    let powerVal = Math.pow(base, exp);
+                    answer = isAdd ? (powerVal + num) : (powerVal - num);
+                    formula = `${base}${symbol} ${isAdd ? '+' : '-'} ${num}`;
+                } else if (subType === 1) {
+                    let roots = [4, 9, 16, 25, 36, 49, 64, 81, 100];
+                    let rootVal = roots[Math.floor(Math.random() * roots.length)];
+                    let rootAns = Math.sqrt(rootVal);
+                    let num = Math.floor(Math.random() * 12) + 2;
+                    let isAdd = Math.random() > 0.5;
+                    answer = isAdd ? (rootAns + num) : (rootAns * num);
+                    formula = `√${rootVal} ${isAdd ? '+' : '×'} ${num}`;
+                } else if (subType === 2) {
+                    let base = Math.floor(Math.random() * 3) + 2; 
+                    let sq = base * base;
+                    let rootVals = [9, 16, 25, 36];
+                    let rootVal = rootVals[Math.floor(Math.random() * rootVals.length)];
+                    let rootAns = Math.sqrt(rootVal);
+                    let num = Math.floor(Math.random() * 10) + 2;
+                    
+                    formula = `${base}² - √${rootVal} + ${num}`;
+                    answer = sq - rootAns + num;
+                } else {
+                    let fractionProblems = [
+                        { q: '1/2 + 1/4', a: '3/4', wrong: ['1/2', '1/4', '1'] },
+                        { q: '3/4 - 1/2', a: '1/4', wrong: ['1/2', '3/4', '1'] },
+                        { q: '1/3 + 1/3', a: '2/3', wrong: ['1/3', '1', '1/2'] },
+                        { q: '1 - 1/3', a: '2/3', wrong: ['1/3', '1/2', '2/3'] }, 
+                        { q: '1/2 + 1/2', a: '1', wrong: ['1/2', '2', '3/4'] },
+                        { q: '3/4 + 1/4', a: '1', wrong: ['1/2', '3/4', '1/4'] },
+                        { q: '1 - 1/4', a: '3/4', wrong: ['1/4', '1/2', '1'] },
+                        { q: '1/3 + 2/3', a: '1', wrong: ['1/2', '1/3', '2'] }
+                    ];
+                    let prob = fractionProblems[Math.floor(Math.random() * fractionProblems.length)];
+                    formula = prob.q;
+                    
+                    let optionKeys = ['A', 'B', 'C', 'D'];
+                    let correctKey = optionKeys[Math.floor(Math.random() * 4)];
+                    let options = {};
+                    let wrongIdx = 0;
+                    optionKeys.forEach(key => {
+                        if (key === correctKey) {
+                            options[key] = prob.a;
+                        } else {
+                            options[key] = prob.wrong[wrongIdx++];
+                        }
+                    });
+                    return {
+                        formula: formula + ' = ?',
+                        options: options,
+                        correctAnswer: correctKey,
+                        correctValue: prob.a
+                    };
+                }
             }
 
-            // 產生 4 個不重複的選項
             const falseAnswers = new Set();
             while (falseAnswers.size < 3) {
-                const offset = (Math.floor(Math.random() * 15) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                let offset = 0;
+                if (answer <= 20) {
+                    offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                } else if (answer <= 100) {
+                    offset = (Math.floor(Math.random() * 12) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                } else {
+                    offset = (Math.floor(Math.random() * 25) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                }
                 const wrongAns = answer + offset;
-                if (wrongAns !== answer && wrongAns > 0) {
+                if (wrongAns !== answer && wrongAns > -20) { 
                     falseAnswers.add(wrongAns);
                 }
             }
@@ -558,248 +1306,539 @@
             };
         }
 
-        // 開始對戰答題
         function startBattle() {
-            hasBuzzed = false;
+            firstShotFired = false;
+            showResultsRevealed = false;
+            firstResponder = null;
+            p1Answer = null;
+            p2Answer = null;
+            p1Shot = false;
+            p2Shot = false;
+
+            waitingForBothA = false;
+            p1PressedAInResult = false;
+            p2PressedAInResult = false;
+
+            document.getElementById('a-press-indicators').classList.add('hidden');
+            document.getElementById('touch-a-confirm-buttons').classList.add('hidden');
+
+            const gunL = document.getElementById('battle-gun-left');
+            if (gunL) {
+                gunL.src = "media/gun L-1.png";
+                gunL.className = "h-24 object-contain max-w-full transition-transform";
+            }
+            const gunR = document.getElementById('battle-gun-right');
+            if (gunR) {
+                gunR.src = "media/gun R-1.png";
+                gunR.className = "h-24 object-contain max-w-full transition-transform";
+            }
+
+            const panelL = document.getElementById('panel-battle-left');
+            const panelR = document.getElementById('panel-battle-right');
+            if (panelL) panelL.className = "col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px]";
+            if (panelR) panelR.className = "col-span-4 bg-slate-900/60 border-2 border-slate-800 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px]";
+
+            const overlayL = document.getElementById('left-gun-effect-overlay');
+            const overlayR = document.getElementById('right-gun-effect-overlay');
+            if (overlayL) { overlayL.innerHTML = ""; overlayL.classList.add('hidden'); }
+            if (overlayR) { overlayR.innerHTML = ""; overlayR.classList.add('hidden'); }
+
+            const feedbackTitle = document.getElementById('battle-feedback-title');
+            const feedbackSubtitle = document.getElementById('battle-feedback-subtitle');
+            
+            if (currentLang === 'zh') {
+                feedbackTitle.textContent = "生死決鬥開始！速戰速決";
+                feedbackSubtitle.textContent = "搶答且答對的開槍勝利！答錯當場炸膛由對手獲勝！";
+            } else {
+                feedbackTitle.textContent = "DUEL STARTED!";
+                feedbackSubtitle.textContent = "FIRST TO CORRECTLY SHOOT WINS! WRONG ANSWER BACKFIRES!";
+            }
+            feedbackTitle.className = "text-[12px] pixel-font text-yellow-400 tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,1)]";
+            feedbackSubtitle.className = "text-[7px] pixel-font text-slate-500 mt-1.5 uppercase animate-pulse";
+
             currentQuestion = generateMathQuestion();
 
-            // 更新戰鬥畫面
-            document.getElementById('math-question').textContent = currentQuestion.formula;
-            document.getElementById('option-a-text').textContent = currentQuestion.options.A;
-            document.getElementById('option-b-text').textContent = currentQuestion.options.B;
-            document.getElementById('option-c-text').textContent = currentQuestion.options.C;
-            document.getElementById('option-d-text').textContent = currentQuestion.options.D;
+            document.getElementById('question-text-battle').textContent = currentQuestion.formula;
+            document.getElementById('val-opt-A').textContent = currentQuestion.options.A;
+            document.getElementById('val-opt-B').textContent = currentQuestion.options.B;
+            document.getElementById('val-opt-C').textContent = currentQuestion.options.C;
+            document.getElementById('val-opt-D').textContent = currentQuestion.options.D;
 
-            // 重設選項盒的樣式
-            ['a', 'b', 'c', 'd'].forEach(letter => {
-                const box = document.getElementById(`option-${letter}-box`);
-                box.className = "bg-slate-800 border-2 border-slate-700 rounded-xl p-4 flex items-center justify-between transition-all duration-200";
+            const letters = ['A', 'B', 'C', 'D'];
+            letters.forEach(letter => {
+                const btn = document.getElementById(`btn-opt-${letter}`);
+                btn.className = "arcade-btn relative bg-slate-900 border-2 border-slate-800 p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between";
+                document.getElementById(`badges-opt-${letter}`).innerHTML = "";
             });
 
-            const buzzIndicator = document.getElementById('buzz-indicator');
-            buzzIndicator.className = "absolute inset-y-0 w-1 bg-slate-500 left-1/2 -translate-x-1/2 transition-all duration-150";
+            battleTimeLeft = 100;
+            updateBattleTimerUI();
+            
+            clearInterval(battleTimer);
+            battleTimer = setInterval(() => {
+                battleTimeLeft -= 1; 
+                updateBattleTimerUI();
+
+                if (battleTimeLeft <= 0) {
+                    clearInterval(battleTimer);
+                    handleRoundTimeout();
+                }
+            }, 100); 
 
             changeScreen('BATTLE');
+            playTrack('battle');
         }
 
-        // 處理玩家作答
-        // player: 'A' 或 'B'
-        // choice: 'A', 'B', 'C', 'D'
-        function handleAnswer(player, choice) {
-            if (hasBuzzed) return; // 已經有人搶答，不予受理
-            hasBuzzed = true;
-
-            // 播放同個資料夾中的 gunshot.mp3 音效
-            try {
-                const gunshot = new Audio('gunshot.mp3');
-                gunshot.play().catch(e => {
-                    console.log("gunshot.mp3 播放受瀏覽器安全限制或檔案不存在：", e);
-                });
-            } catch (e) {
-                console.log("播放槍聲失敗：", e);
+        function updateBattleTimerUI() {
+            const bar = document.getElementById('battle-timer-bar');
+            bar.style.width = `${battleTimeLeft}%`;
+            
+            if (battleTimeLeft > 50) {
+                bar.className = "h-full bg-emerald-500 transition-all duration-100";
+            } else if (battleTimeLeft > 20) {
+                bar.className = "h-full bg-amber-500 transition-all duration-100";
+            } else {
+                bar.className = "h-full bg-rose-600 transition-all duration-100 animate-pulse";
             }
+        }
 
-            const isCorrect = (choice === currentQuestion.correctAnswer);
+        function handleRoundTimeout() {
+            playSound('wrong');
+            revealResultsAndStartResultConfirmState();
+        }
 
-            // 搶答指示條視覺偏向
-            const buzzIndicator = document.getElementById('buzz-indicator');
+        function triggerUnifiedOption(choice) {
+            if (currentGameState !== 'BATTLE') return;
+            if (showResultsRevealed) return; 
+
+            if (!p1Shot) {
+                submitAnswer('A', choice);
+            } else if (!p2Shot) {
+                submitAnswer('B', choice);
+            }
+        }
+
+        function submitAnswer(player, choice) {
+            if (player === 'A' && p1Shot) return;
+            if (player === 'B' && p2Shot) return;
+            if (showResultsRevealed) return; 
+
+            playSound('gunshot');
+
             if (player === 'A') {
-                buzzIndicator.className = "absolute inset-y-0 bg-cyan-500 left-0 right-1/2 transition-all duration-150";
+                p1Shot = true;
+                p1Answer = choice;
+                const gunL = document.getElementById('battle-gun-left');
+                if (gunL) {
+                    gunL.src = "media/gun L-2.png"; 
+                    gunL.classList.add('scale-110');
+                    setTimeout(() => {
+                        if (!showResultsRevealed) {
+                            gunL.src = "media/gun L-1.png";
+                        }
+                        gunL.classList.remove('scale-110');
+                    }, 300);
+                }
             } else {
-                buzzIndicator.className = "absolute inset-y-0 bg-amber-500 left-1/2 right-0 transition-all duration-150";
+                p2Shot = true;
+                p2Answer = choice;
+                const gunR = document.getElementById('battle-gun-right');
+                if (gunR) {
+                    gunR.src = "media/gun R-2.png"; 
+                    gunR.classList.add('scale-110');
+                    setTimeout(() => {
+                        if (!showResultsRevealed) {
+                            gunR.src = "media/gun R-1.png";
+                        }
+                        gunR.classList.remove('scale-110');
+                    }, 300);
+                }
             }
 
-            // 高亮玩家選擇的答案
-            const chosenBox = document.getElementById(`option-${choice.toLowerCase()}-box`);
-            if (isCorrect) {
-                chosenBox.className = "bg-emerald-950/80 border-2 border-emerald-500 rounded-xl p-4 flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-200";
-                playSound('correct');
+            if (!firstShotFired) {
+                firstShotFired = true;
+                firstResponder = player;
+                
+                clearInterval(battleTimer);
+
+                const feedbackSubtitle = document.getElementById('battle-feedback-subtitle');
+                const slinger = player === 'A' ? '1P' : '2P';
+                const oppSlinger = player === 'A' ? '2P' : '1P';
+
+                if (currentLang === 'zh') {
+                    feedbackSubtitle.innerHTML = `<span class="text-yellow-400">⚡ ${slinger} 已開槍！剩餘 0.5 秒供 ${oppSlinger} 進行最後射擊！</span>`;
+                } else {
+                    feedbackSubtitle.innerHTML = `<span class="text-yellow-400">⚡ ${slinger} SHOT! 0.5s LEFT FOR ${oppSlinger} TO SHOOT!</span>`;
+                }
+
+                setTimeout(() => {
+                    revealResultsAndStartResultConfirmState();
+                }, 500);
+            }
+        }
+
+        function applyGunEndState(player, state) {
+            const overlay = document.getElementById(player === '1P' ? 'left-gun-effect-overlay' : 'right-gun-effect-overlay');
+            const panel = document.getElementById(player === '1P' ? 'panel-battle-left' : 'panel-battle-right');
+            if (!overlay || !panel) return;
+
+            overlay.classList.remove('hidden');
+            overlay.innerHTML = "";
+
+            if (state === 'winner-correct') {
+                panel.className = "col-span-4 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px] gun-winner-glow-correct border-4 transition-all";
+                overlay.innerHTML = `
+                    <div class="flex flex-col items-center justify-center bg-black/60 w-full h-full p-1 text-center rounded">
+                        <span class="text-3xl animate-bounce">👑</span>
+                        <span class="text-[9px] pixel-font text-yellow-400 font-bold tracking-wider">WINNER!</span>
+                        <span class="text-[6.5px] pixel-font text-white bg-yellow-600 px-1.5 py-0.5 rounded mt-0.5">${currentLang === 'zh' ? '🎯 神準開槍獲勝' : '🎯 SHOT TO VICTORY'}</span>
+                    </div>
+                `;
+            } else if (state === 'winner-survive') {
+                panel.className = "col-span-4 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px] gun-winner-glow-survive border-4 transition-all";
+                overlay.innerHTML = `
+                    <div class="flex flex-col items-center justify-center bg-black/65 w-full h-full p-1 text-center rounded">
+                        <span class="text-3xl animate-pulse">🛡️</span>
+                        <span class="text-[9px] pixel-font text-green-400 font-bold tracking-wider">SURVIVED</span>
+                        <span class="text-[6.5px] pixel-font text-white bg-green-700 px-1.5 py-0.5 rounded mt-0.5">${currentLang === 'zh' ? '😎 對手炸膛躺贏' : '😎 ENEMY BACKFIRED'}</span>
+                    </div>
+                `;
+            } else if (state === 'loser-backfire') {
+                panel.className = "col-span-4 rounded p-2 flex flex-col justify-center items-center relative shadow-[inset_1px_1px_4px_#000] min-h-[140px] gun-loser-backfire border-4 transition-all";
+                overlay.innerHTML = `
+                    <div class="flex flex-col items-center justify-center bg-black/75 w-full h-full p-1 text-center rounded">
+                        <span class="text-3xl animate-ping absolute opacity-60">💥</span>
+                        <span class="text-3xl z-10">💥</span>
+                        <span class="text-[9px] pixel-font text-red-500 font-bold tracking-wider z-10">DEFEAT</span>
+                        <span class="text-[6.5px] pixel-font text-white bg-red-700 px-1.5 py-0.5 rounded mt-0.5 z-10">${currentLang === 'zh' ? '☠️ 搶答算錯炸膛' : '☠️ BACKFIRE MISFIRE'}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function revealResultsAndStartResultConfirmState() {
+            showResultsRevealed = true;
+            clearInterval(battleTimer); 
+
+            let outcomeMessage = "";
+            let p1Correct = (p1Answer === currentQuestion.correctAnswer);
+            let p2Correct = (p2Answer === currentQuestion.correctAnswer);
+
+            if (firstResponder === 'A') {
+                if (p1Correct) {
+                    scoreA = 1;
+                    outcomeMessage = currentLang === 'zh' ? "🎯 1P 搶答命中！1P 獲得勝利！" : "🎯 1P FIRST SHOT ACED! 1P WINS!";
+                    playSound('correct');
+                    applyGunEndState('1P', 'winner-correct');
+                } else {
+                    scoreB = 1;
+                    outcomeMessage = currentLang === 'zh' ? "💥 1P 搶答炸膛！2P 獲得勝利！" : "💥 1P BACKFIRED! 2P PLAYER WINS!";
+                    playSound('wrong');
+                    playSynthExplosion(); 
+                    applyGunEndState('1P', 'loser-backfire');
+                    applyGunEndState('2P', 'winner-survive');
+                }
+            } else if (firstResponder === 'B') {
+                if (p2Correct) {
+                    scoreB = 1;
+                    outcomeMessage = currentLang === 'zh' ? "🎯 2P 搶答命中！2P 獲得勝利！" : "🎯 2P FIRST SHOT ACED! 2P WINS!";
+                    playSound('correct');
+                    applyGunEndState('2P', 'winner-correct');
+                } else {
+                    scoreA = 1;
+                    outcomeMessage = currentLang === 'zh' ? "💥 2P 搶答炸膛！1P 獲得勝利！" : "💥 2P BACKFIRED! 1P PLAYER WINS!";
+                    playSound('wrong');
+                    playSynthExplosion(); 
+                    applyGunEndState('2P', 'loser-backfire');
+                    applyGunEndState('1P', 'winner-survive');
+                }
             } else {
-                chosenBox.className = "bg-rose-950/80 border-2 border-rose-500 rounded-xl p-4 flex items-center justify-between shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all duration-200";
+                outcomeMessage = currentLang === 'zh' ? "⏳ 時間結束！雙方皆未射擊不分勝負！" : "⏳ TIME OUT! DRAW MATCH!";
                 playSound('wrong');
             }
 
-            // 稍微延遲後切換到判定結果
-            setTimeout(() => {
-                showResult(player, choice, isCorrect);
-            }, 800);
+            const feedbackTitle = document.getElementById('battle-feedback-title');
+            const feedbackSubtitle = document.getElementById('battle-feedback-subtitle');
+            
+            feedbackTitle.textContent = outcomeMessage;
+            feedbackTitle.className = "text-[12px] pixel-font text-emerald-400 tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,1)]";
+            
+            if (currentLang === 'zh') {
+                feedbackSubtitle.textContent = "💡 請雙方確認以重設主機，返回大廳！";
+            } else {
+                feedbackSubtitle.textContent = "💡 BOTH PLAYERS MUST CONFIRM TO RETURN TO LOBBY!";
+            }
+            feedbackSubtitle.className = "text-[7.5px] pixel-font text-yellow-500 mt-1.5 uppercase animate-pulse";
+
+            revealCorrectAnswerUI();
+
+            waitingForBothA = true;
+            p1PressedAInResult = false;
+            p2PressedAInResult = false;
+
+            updateAPressIndicators();
+            document.getElementById('a-press-indicators').classList.remove('hidden');
+            document.getElementById('touch-a-confirm-buttons').classList.remove('hidden');
         }
 
-        // 顯示結果判定
-        function showResult(buzzPlayer, choice, isCorrect) {
-            const crown = document.getElementById('winner-crown');
-            const title = document.getElementById('winner-title');
-            const detail = document.getElementById('winner-detail');
-            
-            let winner = '';
-            if (isCorrect) {
-                winner = buzzPlayer === 'A' ? '玩家 A' : '玩家 B';
-                crown.textContent = '👑';
-                title.textContent = `${winner} 獲得勝利！`;
-                title.className = "text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500";
-                detail.textContent = `精準搶答，回答正確！`;
+        function revealCorrectAnswerUI() {
+            const letters = ['A', 'B', 'C', 'D'];
+
+            letters.forEach(letter => {
+                const btn = document.getElementById(`btn-opt-${letter}`);
+                const badgeContainer = document.getElementById(`badges-opt-${letter}`);
+                badgeContainer.innerHTML = ""; 
+
+                let classNames = "arcade-btn relative p-2 rounded-lg text-left shadow-[4px_4px_0px_0px_#000] flex flex-col justify-between ";
+
+                const isCorrect = (letter === currentQuestion.correctAnswer);
+                const isP1Selected = (letter === p1Answer);
+                const isP2Selected = (letter === p2Answer);
+
+                if (isCorrect) {
+                    classNames += "bg-emerald-950/80 border-4 border-emerald-500 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] ";
+                } else {
+                    classNames += "bg-slate-900 border-2 border-slate-800 text-slate-300 ";
+                }
+
+                btn.className = classNames;
+
+                if (isP1Selected) {
+                    const orderText = (firstResponder === 'A') ? "1st" : "2nd";
+                    const badge = document.createElement('span');
+                    badge.className = "bg-cyan-500 text-black px-1.5 py-0.5 text-[6px] pixel-font font-bold rounded shadow-[2px_2px_0px_#000]";
+                    badge.textContent = `1P [${orderText}]`;
+                    badgeContainer.appendChild(badge);
+                }
+
+                if (isP2Selected) {
+                    const orderText = (firstResponder === 'B') ? "1st" : "2nd";
+                    const badge = document.createElement('span');
+                    badge.className = "bg-amber-500 text-black px-1.5 py-0.5 text-[6px] pixel-font font-bold rounded shadow-[2px_2px_0px_#000]";
+                    badge.textContent = `2P [${orderText}]`;
+                    badgeContainer.appendChild(badge);
+                }
+            });
+        }
+
+        function updateAPressIndicators() {
+            const p1Ind = document.getElementById('p1-a-indicator');
+            const p2Ind = document.getElementById('p2-a-indicator');
+
+            if (p1PressedAInResult) {
+                p1Ind.className = "text-emerald-400 font-bold animate-pulse";
+                p1Ind.textContent = currentLang === 'zh' ? "🟢 1P: 確認 OK" : "🟢 1P: CONFIRMED";
             } else {
-                // 炸膛！另一位玩家獲勝
-                winner = buzzPlayer === 'A' ? '玩家 B' : '玩家 A';
-                crown.textContent = '💥';
-                title.textContent = `💥 ${buzzPlayer === 'A' ? '玩家 A' : '玩家 B'} 炸膛爆機！`;
-                title.className = "text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 animate-pulse";
-                detail.textContent = `${buzzPlayer === 'A' ? '玩家 A' : '玩家 B'} 答錯了，因此【${winner}】直接勝出！`;
+                p1Ind.className = "text-slate-500";
+                p1Ind.textContent = currentLang === 'zh' ? "🔴 1P: 未準備" : "🔴 1P: UNPREPARED";
             }
 
-            // 更新回顧資訊
-            document.getElementById('result-math-formula').textContent = `${currentQuestion.formula.replace('?', '')} = ${currentQuestion.correctValue}`;
-            
-            const buzzerNameEl = document.getElementById('result-buzzer-name');
-            buzzerNameEl.textContent = buzzPlayer === 'A' ? '玩家 A' : '玩家 B';
-            buzzerNameEl.className = buzzPlayer === 'A' ? "font-bold text-cyan-400" : "font-bold text-amber-400";
-            
-            document.getElementById('result-selected-option').textContent = choice;
-            document.getElementById('result-selected-option').className = isCorrect ? "font-bold text-emerald-400" : "font-bold text-rose-500";
-
-            changeScreen('RESULT');
+            if (p2PressedAInResult) {
+                p2Ind.className = "text-emerald-400 font-bold animate-pulse";
+                p2Ind.textContent = currentLang === 'zh' ? "🟢 2P: 確認 OK" : "🟢 2P: CONFIRMED";
+            } else {
+                p2Ind.className = "text-slate-500";
+                p2Ind.textContent = currentLang === 'zh' ? "🔵 2P: 未準備" : "🔵 2P: UNPREPARED";
+            }
         }
 
-        // 開啟 Q 鍵盤確認測試畫面
-        function openKeyboardTest() {
-            if (countdownTimer) clearInterval(countdownTimer); // 終止倒數
+        function confirmTouchA(player) {
+            if (!waitingForBothA) return;
+            playSound('click');
+            if (player === '1P') {
+                p1PressedAInResult = true;
+            } else {
+                p2PressedAInResult = true;
+            }
+            updateAPressIndicators();
+
+            if (p1PressedAInResult && p2PressedAInResult) {
+                initSetup();
+            }
+        }
+
+        function pauseAndOpenTest() {
+            if (currentGameState === 'KEYBOARD_TEST') return;
             
-            // 重設測試鍵盤的所有按鍵記錄
-            const keysA = ['1', '2', '3', '4'];
-            const keysB = ['8', '7', '6', '5'];
+            playSound('click');
+            previousGameState = currentGameState;
+            clearInterval(countdownTimer);
+            clearInterval(battleTimer);
 
-            keysA.forEach(k => {
-                testKeysState[k] = false;
-                document.getElementById(`test-a-${k}`).className = "border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200";
+            modalSettings.classList.add('hidden');
+
+            testKeysState = {
+                '1': false, '2': false, '3': false, '4': false,
+                '5': false, '6': false, '7': false, '8': false
+            };
+            
+            const keys = ['a-1', 'a-2', 'a-3', 'a-4', 'b-8', 'b-7', 'b-6', 'b-5'];
+            keys.forEach(k => {
+                document.getElementById(`test-${k}`).className = "border-2 border-black bg-slate-950 p-1.5 text-center transition-all";
+                document.getElementById(`test-${k}`).querySelector('span:last-child').className = "text-xs font-black text-slate-500 pixel-font";
             });
 
-            keysB.forEach(k => {
-                testKeysState[k] = false;
-                document.getElementById(`test-b-${k}`).className = "border border-slate-700 bg-slate-900/50 p-3 rounded-lg text-center transition-all duration-200";
-            });
-
-            // 重設上方計量看板
-            document.getElementById('test-progress-text').textContent = "已驗證按鍵：0 / 8";
+            document.getElementById('test-last-pressed').textContent = "STANDBY";
+            document.getElementById('test-progress-text').textContent = "0 / 8 VERIFIED";
             document.getElementById('test-progress-bar').style.width = "0%";
-            document.getElementById('test-last-pressed').textContent = "等待按鍵中...";
-            document.getElementById('test-last-pressed').className = "text-slate-400 font-bold";
 
             changeScreen('KEYBOARD_TEST');
         }
 
-        // 鍵盤測試判定 (8個按鍵任意按)
-        function handleTestKeyInput(key) {
+        function resumeGame() {
             playSound('click');
-            
-            // 標記該按鍵已點亮
-            testKeysState[key] = true;
-
-            // 判斷玩家與按鍵名稱，用作螢幕即時顯示
-            let keyIndicatorText = "";
-            let isPlayerAKey = ['1', '2', '3', '4'].includes(key);
-
-            if (isPlayerAKey) {
-                const optionMap = { '1':'A', '2':'B', '3':'C', '4':'D' };
-                keyIndicatorText = `玩家 A 按下 [${key}] (${optionMap[key]})`;
-                
-                // 動態高亮對應 DOM (Cyan 系列)
-                const el = document.getElementById(`test-a-${key}`);
-                el.className = "border-2 border-cyan-500 bg-cyan-950/40 p-3 rounded-lg text-center font-bold text-cyan-400 scale-105 transition-all duration-150 shadow-[0_0_10px_rgba(6,182,212,0.2)]";
+            if (previousGameState === 'BATTLE') {
+                startBattle();
+            } else if (previousGameState === 'COUNTDOWN') {
+                startCountdown();
             } else {
-                const optionMap = { '8':'A', '7':'B', '6':'C', '5':'D' };
-                keyIndicatorText = `玩家 B 按下 [${key}] (${optionMap[key]})`;
-                
-                // 動態高亮對應 DOM (Amber 系列)
-                const el = document.getElementById(`test-b-${key}`);
-                el.className = "border-2 border-amber-500 bg-amber-950/40 p-3 rounded-lg text-center font-bold text-amber-400 scale-105 transition-all duration-150 shadow-[0_0_10px_rgba(245,158,11,0.2)]";
+                changeScreen(previousGameState);
+            }
+        }
+
+        function markKeyTested(key) {
+            testKeysState[key] = true;
+            playSound('tick');
+
+            let mapId = '';
+            if (key === '1') mapId = 'a-1';
+            if (key === '2') mapId = 'a-2';
+            if (key === '3') mapId = 'a-3';
+            if (key === '4') mapId = 'a-4';
+            if (key === '8') mapId = 'b-8';
+            if (key === '7') mapId = 'b-7';
+            if (key === '6') mapId = 'b-6';
+            if (key === '5') mapId = 'b-5';
+
+            if (mapId) {
+                const el = document.getElementById(`test-${mapId}`);
+                if (mapId.startsWith('a')) {
+                    el.className = "border-2 border-black bg-cyan-950 p-1.5 text-center shadow-[0_0_10px_#06b6d4] scale-105 transition-all";
+                    el.querySelector('span:last-child').className = "text-xs font-black text-cyan-400 pixel-font";
+                } else {
+                    el.className = "border-2 border-black bg-amber-950 p-1.5 text-center shadow-[0_0_10px_#f59e0b] scale-105 transition-all";
+                    el.querySelector('span:last-child').className = "text-xs font-black text-amber-400 pixel-font";
+                }
             }
 
-            // 更新即時偵測面板
-            const lastPressedEl = document.getElementById('test-last-pressed');
-            lastPressedEl.textContent = keyIndicatorText;
-            lastPressedEl.className = isPlayerAKey ? "text-cyan-400 font-bold" : "text-amber-400 font-bold";
+            const testedCount = Object.values(testKeysState).filter(v => v).length;
+            document.getElementById('test-progress-text').textContent = `${testedCount} / 8 VERIFIED`;
+            document.getElementById('test-progress-bar').style.width = `${(testedCount / 8) * 100}%`;
 
-            // 計算當前已被驗證點亮的按鍵總數 (有幾項為 true)
-            const activeKeysArray = Object.keys(testKeysState);
-            const verifiedCount = activeKeysArray.filter(k => testKeysState[k] === true).length;
-
-            // 更新進度顯示與進度條
-            document.getElementById('test-progress-text').textContent = `已驗證按鍵：${verifiedCount} / 8`;
-            const percentage = (verifiedCount / 8) * 100;
-            document.getElementById('test-progress-bar').style.width = `${percentage}%`;
-
-            // 當 8 個按鍵全部完成
-            if (verifiedCount === 8) {
-                lastPressedEl.textContent = "🎉 驗證完畢！";
-                lastPressedEl.className = "text-emerald-400 font-black animate-bounce";
-                
+            if (testedCount === 8) {
+                document.getElementById('test-last-pressed').textContent = "ALL PASS! 👍";
                 setTimeout(() => {
-                    playSound('correct');
-                    initSetup();
+                    resumeGame();
                 }, 800);
             }
         }
 
-        // 全域鍵盤監聽事件
-        window.addEventListener('keydown', (e) => {
-            const key = e.key;
+        const modalSettings = document.getElementById('modal-settings');
 
-            // 任何時候按下 Q，皆進入鍵盤功能確認
-            if (key.toLowerCase() === 'q') {
-                openKeyboardTest();
+        document.getElementById('btn-settings').addEventListener('click', () => {
+            playSound('click');
+            previousGameState = currentGameState;
+            clearInterval(countdownTimer);
+            clearInterval(battleTimer);
+            modalSettings.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-modal-close-icon').addEventListener('click', () => {
+            playSound('click');
+            modalSettings.classList.add('hidden');
+            resumeGame();
+        });
+
+        const sliderSfx = document.getElementById('slider-sfx');
+        const lblSfx = document.getElementById('lbl-sfx-vol');
+        
+        sliderSfx.addEventListener('input', (e) => {
+            sfxVolume = e.target.value / 100;
+            lblSfx.textContent = `${e.target.value}%`;
+        });
+        
+        sliderSfx.addEventListener('change', () => {
+            playSound('click'); 
+        });
+
+        const sliderBgm = document.getElementById('slider-bgm');
+        const lblBgm = document.getElementById('lbl-bgm-vol');
+        
+        sliderBgm.addEventListener('input', (e) => {
+            const sliderVal = e.target.value / 100;
+            bgmVolume = Math.pow(sliderVal, 2) * 0.5; 
+            lblBgm.textContent = `${e.target.value}%`;
+            updateBGMVolume();
+        });
+        
+        sliderBgm.addEventListener('change', () => {
+            playSound('tick'); 
+        });
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+
+            if (key === 'q') {
+                if (modalSettings.classList.contains('hidden')) {
+                    if (currentGameState === 'KEYBOARD_TEST') {
+                        resumeGame();
+                    } else {
+                        pauseAndOpenTest();
+                    }
+                }
                 return;
             }
 
-            // 1. 準備畫面狀態
+            if (currentGameState === 'KEYBOARD_TEST') {
+                if (testKeysState[key] !== undefined) {
+                    document.getElementById('test-last-pressed').textContent = `PRESSED: KEY_${key}`;
+                    markKeyTested(key);
+                }
+                return;
+            }
+
             if (currentGameState === 'SETUP') {
-                if (key === '1') {
-                    triggerReadyA();
-                } else if (key === '8') {
-                    triggerReadyB();
-                }
+                if (key === '1') triggerReadyA();
+                if (key === '8') triggerReadyB();
+                return;
             }
-            
-            // 2. 對戰抢答狀態
-            else if (currentGameState === 'BATTLE') {
-                // A 玩家控制: 1->A, 2->B, 3->C, 4->D
-                if (key === '1') {
-                    handleAnswer('A', 'A');
-                } else if (key === '2') {
-                    handleAnswer('A', 'B');
-                } else if (key === '3') {
-                    handleAnswer('A', 'C');
-                } else if (key === '4') {
-                    handleAnswer('A', 'D');
-                }
+
+            if (currentGameState === 'BATTLE') {
                 
-                // B 玩家控制: 8->A, 7->B, 6->C, 5->D
-                else if (key === '8') {
-                    handleAnswer('B', 'A');
-                } else if (key === '7') {
-                    handleAnswer('B', 'B');
-                } else if (key === '6') {
-                    handleAnswer('B', 'C');
-                } else if (key === '5') {
-                    handleAnswer('B', 'D');
+                if (waitingForBothA) {
+                    if (key === '1') {
+                        p1PressedAInResult = true;
+                        playSound('click');
+                        updateAPressIndicators();
+                    }
+                    if (key === '8') {
+                        p2PressedAInResult = true;
+                        playSound('click');
+                        updateAPressIndicators();
+                    }
+                    
+                    if (p1PressedAInResult && p2PressedAInResult) {
+                        initSetup();
+                    }
+                    return;
                 }
-            }
 
-            // 3. 結果判定狀態：按下任意按鍵返回準備畫面
-            else if (currentGameState === 'RESULT') {
-                playSound('click');
-                initSetup();
-            }
+                if (key === '1') submitAnswer('A', 'A');
+                if (key === '2') submitAnswer('A', 'B');
+                if (key === '3') submitAnswer('A', 'C');
+                if (key === '4') submitAnswer('A', 'D');
 
-            // 4. 鍵盤確認測試狀態
-            else if (currentGameState === 'KEYBOARD_TEST') {
-                if (['1','2','3','4','8','7','6','5'].includes(key)) {
-                    handleTestKeyInput(key);
-                }
+                if (key === '8') submitAnswer('B', 'A');
+                if (key === '7') submitAnswer('B', 'B');
+                if (key === '6') submitAnswer('B', 'C');
+                if (key === '5') submitAnswer('B', 'D');
+                return;
             }
         });
 
-        // 啟動首頁
+        setLanguage('zh');
         initSetup();
+
     </script>
 </body>
 </html>
